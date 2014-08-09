@@ -1,6 +1,6 @@
 #include <iostream>
 
-int main(int c, char **v)
+int main(__attribute__((unused)) int c, __attribute__((unused)) char **v)
 {
     return 0;
 }

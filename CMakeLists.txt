@@ -45,8 +45,8 @@ set(64_BIT_BUILD true)
 
 #boost settings
 set(USING_BOOST_LIBRARY true)
-set(BOOST_LIB_COMPONENTS system) #change these library filenames if necessary
-set(BOOST_LIB_COMPONENTS_LITERAL libboost_system.a) 
+set(BOOST_LIB_COMPONENTS system filesystem) #change these library filenames if necessary
+set(BOOST_LIB_COMPONENTS_LITERAL libboost_system.a libboost_filesystem.a)
 
 #ncurses settings
 set(USING_NCURSES_LIBRARY true)

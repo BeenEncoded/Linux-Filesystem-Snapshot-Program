@@ -1,6 +1,7 @@
 #ifndef COMMON_HPP_INCLUDED
 #define COMMON_HPP_INCLUDED
 #include <vector>
+#include <ctime>
 
 #include "global_defines.hpp"
 
@@ -17,6 +18,7 @@ namespace common
     bool is_special(const char&);
     bool is_char(const char&);
     void center(const std::string&);
+    struct tm get_time();
     
     namespace inp
     {

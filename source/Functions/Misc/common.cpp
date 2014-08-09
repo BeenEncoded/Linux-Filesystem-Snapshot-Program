@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <ctime>
 
 #include "iofunctions.hpp"
 #include "global_defines.hpp"
@@ -111,6 +112,15 @@ namespace common
         if(cent < 0) cent = 0;
         if(cent > 0) cout<< std::string(cent, ' ');
         cout<< message;
+    }
+    
+    struct tm get_time()
+    {
+        struct tm temptime;
+        time_t rawtime;
+        time(&rawtime);
+        temptime = (*(localtime(&rawtime)));
+        return temptime;
     }
     
     namespace inp
