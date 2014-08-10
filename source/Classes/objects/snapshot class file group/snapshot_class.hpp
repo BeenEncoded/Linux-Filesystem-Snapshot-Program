@@ -17,11 +17,13 @@ namespace snapshot
     
     struct snapshot_data
     {
+        const snapshot_data& operator=(const snapshot_data&);
+        
+        std::string root;
         std::vector<std::string> paths;
         date::date_val timestamp;
+        unsigned long long id = 0;
     };
-    
-    bool take_snapshot(snapshot_data&);
     
 }
 

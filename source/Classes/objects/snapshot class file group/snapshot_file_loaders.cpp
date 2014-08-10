@@ -1,0 +1,70 @@
+#include <vector>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <boost/filesystem.hpp>
+
+#include "snapshot_file_loaders.hpp"
+#include "filesystem.hpp"
+#include "snapshot_class.hpp"
+#include "global_defines.hpp"
+
+using boost::filesystem::current_path;
+using fsys::is_file;
+using fsys::is_folder;
+using fsys::is_symlink;
+using fsys::tree_riterator_class;
+using std::string;
+
+namespace
+{
+    string file_extension(const std::string&);
+    
+    
+    inline std::string file_extension(const std::string& p)
+    {
+        string temps;
+        bool dotmet(false);
+        
+        if(is_file(p).value)
+        {
+            for(std::string::const_reverse_iterator it = p.rbegin(); ((it != p.rend()) && !dotmet); it++)
+            {
+                temps = ((*it) + temps);
+                if((*it == '.') && !dotmet) dotmet = true;
+            }
+        }
+        return temps;
+    }
+    
+    
+}
+
+namespace snapshot
+{
+    std::vector<string> get_files(const string& p)
+    {
+        std::vector<string> snapshot_files;
+        
+        if(is_folder(p).value && !is_symlink(p).value)
+        {
+            for(tree_riterator_class it(p); !it.at_end(); ++it)
+            {
+                if(file_extension(*it) == fsyssnap_SNAPSHOT_FILE_EXTENSION)
+                {
+                    snapshot_files.push_back(*it);
+                }
+            }
+        }
+        return snapshot_files;
+    }
+    
+    std::string snapshot_folder()
+    {
+        return (current_path().make_preferred().string() + 
+                boost::filesystem::path("/").make_preferred().string() + 
+                fsyssnap_SNAPSHOT_FOLDER_NAME);
+    }
+    
+    
+}

@@ -125,6 +125,7 @@ namespace common
     
     namespace inp
     {
+        
         bool is_sure(const std::string& s)
         {
             using std::cout;

@@ -7,6 +7,16 @@
 #define SPECIALS "`~!@#$%^&*()-_=+[{]}\\|;:\'\",<.>/? "
 #define GSTRING_CANCEL "oiwydfp980  q30f8p90c9-i130894f=i-=23f=-    0w2g]["
 
+/** FILESYSTEM reading constants: */
+
+
+//snapshot folder (snap_):
+#define fsyssnap_SNAPSHOT_FOLDER_NAME "snapshots"
+#define fsyssnap_SNAPSHOT_FILE_EXTENSION ".snap"
+
+
+/** FILESYSTEM reading constants END */
+
 template<char>
 struct const_char_type
 {
