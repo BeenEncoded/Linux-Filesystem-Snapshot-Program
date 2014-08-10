@@ -3,9 +3,11 @@
 #include <sstream>
 #include <vector>
 #include <exception>
+#include <iostream>
 
 #include "date_class.hpp"
 #include "global_defines.hpp"
+#include "common.hpp"
 
 #include <assert.h>
 
@@ -79,6 +81,32 @@ namespace
 /** Functions belonging to the date_val data structure:  */
 namespace date
 {
+    std::ostream& operator<<(std::ostream& out, const date_val& d)
+    {
+        if(out.good())
+        {
+            out<< d.year<< mem_delim::value;
+            out<< d.yday<< mem_delim::value;
+            out<< d.weekday<< mem_delim::value;
+            out<< d.month<< mem_delim::value;
+            out<< d.mday<< mem_delim::value;
+        }
+        return out;
+    }
+    
+    std::istream& operator>>(std::istream& in, date_val& d)
+    {
+        using common::safe_getline;
+        
+        d = date_val();
+        if(safe_getline(in, d.year, mem_delim::value))
+            if(safe_getline(in, d.yday, mem_delim::value))
+                if(safe_getline(in, d.weekday, mem_delim::value))
+                    if(safe_getline(in, d.month, mem_delim::value))
+                        safe_getline(in, d.mday, mem_delim::value);
+        
+        return in;
+    }
     
     void date_val::operator=(const date_val& i)
     {

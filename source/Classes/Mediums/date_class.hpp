@@ -1,6 +1,7 @@
 #ifndef DATE_CLASS_HPP_INCLUDED
 #define DATE_CLASS_HPP_INCLUDED
 #include <ctime>
+#include <iostream>
 
 #define YDAYS(year) (__isleap(year) ? 366 : 365)
 
@@ -10,6 +11,9 @@ namespace date
     struct date_val;
     
     std::string display(const date_val&);
+    
+    std::ostream& operator<<(std::ostream&, const date_val&);
+    std::istream& operator>>(std::istream&, date_val&);
     
     /* Used to apply math to dates.  Allows
      addition and subraction of days from/to

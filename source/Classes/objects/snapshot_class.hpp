@@ -17,9 +17,6 @@ namespace snapshot
     
     struct snapshot_data
     {
-        bool operator<(const snapshot_data&) const;
-        bool operator<=(const snapshot_data&) const;
-        
         std::vector<std::string> paths;
         date::date_val timestamp;
     };
