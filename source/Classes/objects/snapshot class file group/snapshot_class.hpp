@@ -13,11 +13,13 @@ namespace snapshot
     
     
     std::istream& operator>>(std::istream&, snapshot_data&);
-    std::ostream& operator<<(std::ostream&, snapshot_data&);
+    std::ostream& operator<<(std::ostream&, const snapshot_data&);
     
     struct snapshot_data
     {
         const snapshot_data& operator=(const snapshot_data&);
+        bool operator==(const snapshot_data&) const;
+        bool operator!=(const snapshot_data&) const;
         
         std::string root;
         std::vector<std::string> paths;

@@ -68,7 +68,21 @@ namespace snapshot
             this->timestamp = snap.timestamp;
             this->id = snap.id;
         }
-        return this;
+        return *this;
+    }
+    
+    bool snapshot_data::operator==(const snapshot_data& snap) const
+    {
+        return (
+                (this->paths == snap.paths) && 
+                (this->id == snap.id) && 
+                (this->root == snap.root) && 
+                (this->timestamp == snap.timestamp));
+    }
+    
+    bool snapshot_data::operator!=(const snapshot_data& snap) const
+    {
+        return !(this->operator==(snap));
     }
     
     

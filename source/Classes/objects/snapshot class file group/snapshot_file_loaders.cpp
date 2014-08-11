@@ -6,7 +6,6 @@
 
 #include "snapshot_file_loaders.hpp"
 #include "filesystem.hpp"
-#include "snapshot_class.hpp"
 #include "global_defines.hpp"
 
 using boost::filesystem::current_path;
@@ -50,9 +49,9 @@ namespace snapshot
         {
             for(tree_riterator_class it(p); !it.at_end(); ++it)
             {
-                if(file_extension(*it) == fsyssnap_SNAPSHOT_FILE_EXTENSION)
+                if(file_extension(it.value()) == fsyssnap_SNAPSHOT_FILE_EXTENSION)
                 {
-                    snapshot_files.push_back(*it);
+                    snapshot_files.push_back(it.value());
                 }
             }
         }
