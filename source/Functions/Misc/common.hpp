@@ -76,6 +76,11 @@ namespace common
         
     }
     
+    struct menu_return_data
+    {
+        bool canceled = false, modified = false;
+    };
+    
     void cls();
     void cl();
     key_code::key_code_data gkey();
