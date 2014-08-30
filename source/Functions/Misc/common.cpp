@@ -6,6 +6,7 @@
 #include "iofunctions.hpp"
 #include "global_defines.hpp"
 #include "common.hpp"
+#include "scroll_display.hpp"
 
 namespace
 {
@@ -123,6 +124,45 @@ namespace common
         return temptime;
     }
     
+    void display_scroll_window(scrollDisplay::scroll_display_class& win, const unsigned int& whole_size)
+    {
+        using std::cout;
+        using std::endl;
+        
+        output::cls();
+        
+        std::vector<std::string> tempv(win.window());
+        unsigned int size(tempv.size());
+        
+        if(win.window_beg() > 0)
+        {
+            common::center(std::to_string(win.window_beg()));
+            cout<< endl;
+            cout<< std::string(70, '^')<< endl;
+        }
+        else cout<< endl<< endl;
+        
+        for(int x = 0; x < (signed)size; x++)
+        {
+            if(win.gpos().part == x) cout<< " [";
+            else cout<< "  ";
+            
+            cout<< tempv[win.gpos().part];
+            
+            if(win.gpos().part == x) cout<< "]";
+            
+            cout<< endl;
+        }
+        
+        if((whole_size - (win.window_beg() + win.window_size())) > 0)
+        {
+            cout<< std::string(70, 'v')<< endl;
+            common::center(std::to_string((whole_size - (win.window_beg() + win.window_size()))));
+            cout<< endl;
+        }
+        else cout<< endl<< endl;
+    }
+    
     namespace inp
     {
         
@@ -232,7 +272,6 @@ namespace common
             }while(!finished);
             return input;
         }
-        
         
     }
     

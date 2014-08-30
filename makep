@@ -1,0 +1,5 @@
+#!/bin/bash
+
+#add "build" folder, and then just run this simple script to build!  :)
+
+clear && rm -rf ./build/* && cd ./build && cmake .. && clear && make clean && make

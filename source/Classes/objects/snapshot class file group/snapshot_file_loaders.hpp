@@ -3,8 +3,6 @@
 #include <string>
 #include <vector>
 
-#include "snapshot_class.hpp"
-
 /** 
  * Loads snapshot information.  This is specific to the filesystem, 
  * and is put here as a means to centralize all filesystem operations
@@ -13,7 +11,7 @@
 namespace snapshot
 {
     std::string snapshot_folder();
-    std::vector<std::string> get_files(const std::string&);
+    std::vector<std::string> paths_of_extension(const std::string&, const std::string&);
 }
 
 #endif

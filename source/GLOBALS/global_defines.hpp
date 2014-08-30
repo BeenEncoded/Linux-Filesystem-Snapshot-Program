@@ -20,17 +20,17 @@
 template<char>
 struct const_char_type
 {
-    static char value;
+    static const char value;
 };
 
 template<unsigned int>
 struct const_int_type
 {
-    static unsigned int value;
+    static const unsigned int value;
 };
 
-template<char type> char const_char_type<type>::value = type;
-template<unsigned int type> unsigned int const_int_type<type>::value = type;
+template<char type> const char const_char_type<type>::value = type;
+template<unsigned int type> const unsigned int const_int_type<type>::value = type;
 
 typedef const_char_type<0x00> mem_delim;
 typedef const_char_type<0x01> struct_delim;

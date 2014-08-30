@@ -41,7 +41,7 @@ namespace
 
 namespace snapshot
 {
-    std::vector<string> get_files(const string& p)
+    std::vector<string> paths_of_extension(const string& p, const string& ext)
     {
         std::vector<string> snapshot_files;
         
@@ -49,7 +49,7 @@ namespace snapshot
         {
             for(tree_riterator_class it(p); !it.at_end(); ++it)
             {
-                if(file_extension(it.value()) == fsyssnap_SNAPSHOT_FILE_EXTENSION)
+                if(file_extension(it.value()) == ext)
                 {
                     snapshot_files.push_back(it.value());
                 }

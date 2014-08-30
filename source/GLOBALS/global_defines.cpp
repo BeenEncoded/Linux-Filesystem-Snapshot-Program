@@ -124,12 +124,12 @@ namespace key_code
         key_code_data(std::vector<int>{27, 91, 66}),      //down
         key_code_data(std::vector<int>{27, 91, 68}),      //left
         key_code_data(std::vector<int>{27, 91, 67}),      //right
-        key_code_data(std::vector<int>{27, 91, 53, 126}),  //pgup
+        key_code_data(std::vector<int>{27, 91, 53, 126}), //pgup
         key_code_data(std::vector<int>{27, 91, 54, 126}), //pgdown
-        key_code_data((char)0x00), //f1 key: could not reproduce; reason: terminal grabbed it
-        key_code_data(std::vector<int>{27, 79, 81}), //f2
-        key_code_data(std::vector<int>{27, 79, 82}), //f3
-        key_code_data(std::vector<int>{27, 79, 83}), //f4
+        key_code_data((char)0x00), //                       f1 key: could not reproduce; reason: terminal grabbed it
+        key_code_data(std::vector<int>{27, 79, 81}), //     f2
+        key_code_data(std::vector<int>{27, 79, 82}), //     f3
+        key_code_data(std::vector<int>{27, 79, 83}), //     f4
         key_code_data(std::vector<int>{27, 91, 49, 53, 126}), //f5
         key_code_data(std::vector<int>{27, 91, 49, 55, 126}), //f6
         key_code_data(std::vector<int>{27, 91, 49, 56, 126}), //f7

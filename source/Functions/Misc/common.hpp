@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "global_defines.hpp"
+#include "scroll_display.hpp"
 
 namespace common
 {
@@ -76,11 +77,6 @@ namespace common
         
     }
     
-    struct menu_return_data
-    {
-        bool canceled = false, modified = false;
-    };
-    
     void cls();
     void cl();
     key_code::key_code_data gkey();
@@ -93,6 +89,7 @@ namespace common
     bool is_char(const char&);
     void center(const std::string&);
     struct tm get_time();
+    void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&);
     
     namespace inp
     {
