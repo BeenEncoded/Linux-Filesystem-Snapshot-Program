@@ -136,7 +136,7 @@ namespace common
         
         if(win.window_beg() > 0)
         {
-            common::center(std::to_string(win.window_beg()));
+            common::center("^^ " + std::to_string(win.window_beg()) + " ^^");
             cout<< endl;
             cout<< std::string(70, '^')<< endl;
         }

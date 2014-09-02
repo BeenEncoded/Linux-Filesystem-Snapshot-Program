@@ -30,6 +30,7 @@ namespace
     vector<snapshot_data> list_snapshot_info(const string&);
     unsigned long long new_snapshot_id();
     unordered_set<unsigned long long> extract_ids(const vector<snapshot_data>&);
+    void display_help();
     
     
     
@@ -110,11 +111,31 @@ namespace
         return newid;
     }
     
+    inline void display_help()
+    {
+        common::cls();
+        for(unsigned int x = 0; x < 3; x++) cout<< endl;
+        cout<< " Controls:"<< endl;
+        cout<< endl;
+        cout<< " [DELETE]      -  Deletes selected snapshot"<< endl;
+        cout<< " [ENTER]       -  Set selected snapshot"<< endl;
+        cout<< " [up arrow]    -  scroll up in list"<< endl;
+        cout<< " [down arrow]  -  scroll down in list"<< endl;
+        cout<< " [page up]     -  scroll one page up"<< endl;
+        cout<< " [page down]   -  scroll one page down"<< endl;
+        cout<< " [HOME]        -  jump to begin"<< endl;
+        cout<< " [END]         -  jump to end"<< endl;
+        cout<< " \'n\'         -  New Snapshot"<< endl;
+        cout<< " \'e\'         -  Exit"<< endl;
+        common::wait();
+    }
+    
     
 }
 
 namespace snapshot_menu
 {
+    
     menu_return_data main_snapshot_menu(vector<snapshot_data>& snapshots)
     {
         using scrollDisplay::scroll_display_class;
@@ -127,6 +148,19 @@ namespace snapshot_menu
         key_code_data ch;
         bool finished(false);
         
+        auto update_display = [&snapshots, &display](void)->void
+        {
+            display.clear();
+            for(std::vector<snapshot_data>::const_iterator it = snapshots.begin(); 
+                    it != snapshots.end(); ++it)
+            {
+                display.push_back(date::display(it->timestamp));
+            }
+        };
+        
+        
+        update_display();
+        window.window_size() = common_menu::wsize::value;
         do
         {
             common::cls();
@@ -145,24 +179,31 @@ namespace snapshot_menu
             
             if(key_code::is_control(ch))
             {
+                if(!display.empty())
                 {
-                    using key_code::keys;
-                    using namespace key_code::code;
-                    if(ch == keys[up::value]) window.mv_up();
-                    else if(ch == keys[down::value]) window.mv_down();
-                    else if(ch == keys[pgup::value]) window.pg_up();
-                    else if(ch == keys[pgdown::value]) window.pg_down();
-                    else if(ch == keys[home::value]) while(window.pg_up());
-                    else if(ch == keys[end::value]) while(window.pg_down());
-                    else if(ch == keys[del::value])
+                    //block for containment of key_code::code namespace
                     {
-                        if(!snapshots.empty())
+                        using key_code::keys;
+                        using namespace key_code::code;
+
+                        if(ch == keys[up::value]) window.mv_up();
+                        else if(ch == keys[down::value]) window.mv_down();
+                        else if(ch == keys[pgup::value]) window.pg_up();
+                        else if(ch == keys[pgdown::value]) window.pg_down();
+                        else if(ch == keys[home::value]) while(window.pg_up());
+                        else if(ch == keys[end::value]) while(window.pg_down());
+                        else if(ch == keys[del::value])
                         {
-                            snapshots.erase(snapshots.begin() + window.gpos().whole);
+                            if(!snapshots.empty())
+                            {
+                                snapshots.erase(snapshots.begin() + window.gpos().whole);
+                            }
+                            update_display();
                         }
-                    }
-                    else if(ch == keys[f5::value])
-                    {//@todo help display
+                        else if(ch == keys[f5::value])
+                        {
+                            display_help();
+                        }
                     }
                 }
             }
@@ -178,18 +219,20 @@ namespace snapshot_menu
                             {
                                 //@todo modify selected snapshot
                             }
+                            update_display();
                         }
                         break;
                         
                         case 'n':
                         {
                             //@todo add new snapshot && save
+                            update_display();
                         }
                         break;
                         
                         case 'e':
                         {
-                            finished = true;
+                            if(!finished) finished = true;
                         }
                         break;
                         
