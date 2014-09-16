@@ -3,10 +3,13 @@
 #include <iostream>
 #include <unordered_set>
 #include <functional>
+#include <fstream>
 
 #include "common_menu.hpp"
 #include "common.hpp"
 #include "snapshot_class.hpp"
+#include "snapshot_file_loaders.hpp"
+#include "filesystem.hpp"
 
 using std::cout;
 using std::endl;
@@ -71,6 +74,58 @@ namespace
     
 }
 
+/* Snapshot_menu-specific functions */
+namespace common_menu
+{
+    namespace snapshot
+    {
+        bool save_snapshot(const ::snapshot::snapshot_data& snap)
+        {
+            using std::ofstream;
+            using fsys::is_folder;
+            using fsys::is_symlink;
+            using fsys::create_folder;
+            using fsys::result_data_boolean;
+            using ::snapshot::snapshot_folder;
+            using ::snapshot::snapshot_path;
+            using fsys::pref_slash;
+            
+            ofstream out;
+            result_data_boolean tempres;
+            std::string folder(snapshot_folder()), file(snapshot_path(snap.id));
+            bool success(false);
+            
+            if(snap.id != 0)
+            {
+                if(!is_folder(folder).value)
+                {
+                    tempres = create_folder(folder);
+                    if(!tempres.value)
+                    {
+                        cout<< "bool save_snapshot(const snapshot::snapshot_class&)\
+    : error; \""<< tempres.error<< "\""<< endl;
+                    }
+                }
+                if(is_folder(folder).value && !is_symlink(folder).value)
+                {
+                    out.open(file.c_str(), std::ios::binary);
+                    out<< snap;
+                    out.close();
+                    success = true;
+                }
+            }
+            else
+            {
+                std::cerr<< "Snapshot not saved: invalid identification (unsigned \
+    long long)"<< std::endl;
+            }
+            return success;
+        }
+        
+        
+    }
+}
+
 namespace common_menu
 {
     void display_scroll_window(scrollDisplay::scroll_display_class& win, const unsigned int& total_size)
@@ -89,167 +144,46 @@ namespace common_menu
     
 }
 
-/* Display selection class */
+/* selection class */
 namespace common_menu
 {
-    /* Stores and retrieves a set of "selected" data.  This
-     * is meant to be used for display purposes.  Given a compare function, 
-     * and a group of elements, a */
-    template<typename type>
-    class selection_class
+    selection_class::selection_class() : selection() {}
+    
+    selection_class::~selection_class()
     {
-    public:
-        explicit selection_class() : data(nullptr), selection(), compare() {}
-        explicit selection_class(const std::vector<type>& v, const std::function<bool(const type&, const type&)>& f) : 
-                data(&v), 
-                selection(), 
-                compare(f) {}
-        
-        ~selection_class(){}
-        
-        const selection_class& operator=(const selection_class& s)
+        this->selection.clear();
+    }
+    
+    const selection_class& selection_class::operator=(const selection_class& s)
+    {
+        if(this != &s)
         {
-            if(this != &s)
-            {
-                this->data = s.data;
-                this->selection = s.selection;
-            }
-            return *this;
+            this->selection = s.selection;
         }
-        
-        void clear()
-        {
-            this->data = nullptr;
-            this->selection.clear();
-        }
-        
-        bool add(const type& t)
-        {
-            unsigned int ind(this->index_of(t));
-            if(this->selection.find(ind) == this->selection.end())
-            {
-                return this->selection.insert(ind).second;
-            }
-            return false;
-        }
-        
-        bool add(const unsigned int& x)
-        {
-            if(this->selection.find(x) == this->selection.end())
-            {
-                return this->selection.insert(x).second;
-            }
-            return false;
-        }
-        
-        bool remove(const unsigned int& x)
-        {
-            if(this->selection.find(x) != this->selection.end())
-            {
-                this->selection.erase(this->selection.find(x));
-                return true;
-            }
-            return false;
-        }
-        
-        bool remove(const type& t)
-        {
-            unsigned int ind(0);
-            if(collisions(t) > 1)
-            {
-                throw "ERROR: bool ::common_menu::selection_class<typename>::remove(const type&): \
-can not remove: compare function generates too many collisions for this action to be reliable!";
-            }
-            else
-            {
-                if(this->contains(t))
-                {
-                    ind = this->index_of(t);
-                    if(this->selection.find(ind) != this->selection.end())
-                    {
-                        return this->selection.erase(ind);
-                    }
-                }
-            }
-            return false;
-        }
-        
-        bool is_selected(const unsigned int& x) const
-        {
-            return (this->selection.find(x) != this->selection.end());
-        }
-        
-        bool is_selected(const type& t) const
-        {
-            if(this->collisions(t) > 1)
-            {
-                throw "ERROR: bool ::common_menu::selection_class<typename>::is_selected(const type&): \
-can not compute: compare function generates too many collisions for this action to be reliable!";
-            }
-            if(this->contains(t))
-            {
-                return (this->selection.find(this->index_of(t)) != this->selection.end());
-            }
-        }
-        
-        /* since this object can refer to anything, we must be able to check
-         * if the compare function provided creates collisions.  This operation
-         * is cpu-intensive (0(n!)), so it should only be used when absolutely necessary.
-         * 
-         * Do NOT abuse this function, or rely on it for reliability checking. */
-        bool compare_funct_reliable()
-        {
-            unsigned int count;
-            for(std::vector<std::string>::const_iterator it = this->data->begin(); 
-                    it != this->data->end(); ++it)
-            {
-                for(std::vector<std::string>::const_iterator subit = (it + 1); 
-                        ((subit != this->data->end()) && (count < 2)); ++subit)
-                {
-                    if(this->compare(*it, *subit)) count++;
-                }
-                if(count == 1) count = 0;
-                else return false;
-            }
-            return true;
-        }
-        
-    private:
-        unsigned int index_of(const type& t) const
-        {
-            for(unsigned int x = 0; x < this->data->size(); x++)
-            {
-                if(this->compare((*(this->data))[x], t)) return x;
-            }
-            return 0;
-        }
-        
-        /* returns the number of collisions the compare functions generates. */
-        unsigned int collisions(const type& t) const
-        {
-            unsigned int count(0);
-            for(typename std::vector<type>::const_iterator it = this->data->begin(); 
-                    it != this->data->end(); ++it)
-            {
-                if(this->compare(t, *it)) count++;
-            }
-            return count;
-        }
-        
-        bool contains(const type& t) const
-        {
-            for(typename std::vector<type>::const_iterator it = this->data->begin(); it != this->data->end(); 
-                    ++it)
-            {
-                if(compare(t, *it)) return true;
-            }
-            return false;
-        }
-        
-        std::vector<type> *data;
-        std::unordered_set<unsigned int> selection;
-        std::function<bool(const type&, const type&)> compare;
-        
-    };
+        return *this;
+    }
+    
+    bool selection_class::is_selected(const unsigned int& x) const
+    {
+        return (this->selection.find(x) != this->selection.end());
+    }
+    
+    /* returns true if the element was added to the selection.*/
+    bool selection_class::add(const unsigned int& x)
+    {
+        return this->selection.insert(x).second;
+    }
+    
+    bool selection_class::remove(const unsigned int& x)
+    {
+        return (this->selection.erase(x) > 0);
+    }
+    
+    /* returns the number of selected elements.*/
+    unsigned int selection_class::count() const
+    {
+        return this->selection.size();
+    }
+    
     
 }

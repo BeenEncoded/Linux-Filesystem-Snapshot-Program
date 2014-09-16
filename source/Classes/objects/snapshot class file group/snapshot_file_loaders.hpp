@@ -12,6 +12,8 @@ namespace snapshot
 {
     std::string snapshot_folder();
     std::vector<std::string> paths_of_extension(const std::string&, const std::string&);
+    std::string snapshot_path(const unsigned long long&);
+    
 }
 
 #endif

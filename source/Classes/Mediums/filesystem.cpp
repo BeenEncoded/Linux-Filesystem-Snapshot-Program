@@ -1030,6 +1030,10 @@ ity of path could not be established.  No action could be taken.");
 /** Functions: */
 namespace fsys
 {
+    char pref_slash()
+    {
+        return boost::filesystem::path("/").make_preferred().string().at(0);
+    }
     
     /* Copies path "from", into "to".  To must be a folder.  Will attempt
      any kind of path. */

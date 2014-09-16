@@ -6,6 +6,7 @@
 namespace snapshot_menu
 {
     common_menu::menu_return_data main_snapshot_menu(std::vector<snapshot::snapshot_data>&);
+    
 }
 
 #endif

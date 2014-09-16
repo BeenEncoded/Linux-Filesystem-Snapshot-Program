@@ -213,20 +213,19 @@ namespace snapshot_menu
                 {
                     switch(std::tolower(ch.ch()))
                     {
-                        case '\n':
+                        case 'n':
                         {
-                            if(!snapshots.empty())
+                            if(common::inp::is_sure("Do you really want to take a snapshot?"))
                             {
-                                //@todo modify selected snapshot
+                                //TODO add new snapshot && save
+                                update_display();
                             }
-                            update_display();
                         }
                         break;
                         
-                        case 'n':
+                        case ' ':
                         {
-                            //@todo add new snapshot && save
-                            update_display();
+                            //todo select snapshot to compare
                         }
                         break;
                         

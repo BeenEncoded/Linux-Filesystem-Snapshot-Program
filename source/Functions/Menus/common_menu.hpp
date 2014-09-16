@@ -1,5 +1,6 @@
 #ifndef MENU_GLOBALS_HPP_INCLUDED
 #define MENU_GLOBALS_HPP_INCLUDED
+#include <unordered_set>
 
 
 #include "scroll_display.hpp"
@@ -14,6 +15,7 @@ namespace common_menu
     typedef const_int_type<10> wsize;
     
     struct menu_return_data;
+    class selection_class;
     
     struct menu_return_data
     {
@@ -26,7 +28,31 @@ namespace common_menu
         multi_select = 1
     };
     
+    class selection_class
+    {
+    public:
+        explicit selection_class();
+        ~selection_class();
+        
+        const selection_class& operator=(const selection_class&);
+        
+        bool add(const unsigned int&);
+        bool is_selected(const unsigned int&) const;
+        bool remove(const unsigned int&);
+        unsigned int count() const;
+        
+    private:
+        std::unordered_set<unsigned int> selection;
+        
+    };
+    
     void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&);
+    
+    namespace snapshot
+    {
+        bool save_snapshot(const ::snapshot::snapshot_data&);
+        //todo load snapshot of a specified id
+    }
     
 }
 

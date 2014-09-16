@@ -48,6 +48,10 @@ set(USING_BOOST_LIBRARY true)
 set(BOOST_LIB_COMPONENTS system filesystem) #change these library filenames if necessary
 set(BOOST_LIB_COMPONENTS_LITERAL libboost_system.a libboost_filesystem.a)
 
+#Additional Libraries
+set(USING_ADDITIONAL_LIBS false)
+set(ADDITIONAL_LIB_COMPONENTS_LITERAL libUnitTest++.a) #add additional misc libs here
+
 #ncurses settings
 set(USING_NCURSES_LIBRARY true)
 set(NCURSES_LIB_COMPONENTS ncurses) #change these library filenames if necessary
@@ -120,6 +124,22 @@ macro(add_boost)
         message("FATAL ERROR: boost library not found!")
     endif()
 endmacro(add_boost)
+
+#adds additional libraries
+macro(add_additional_libs)
+    if(USING_ADDITIONAL_LIBS)
+        foreach(tempf ${ADDITIONAL_LIB_COMPONENTS_LITERAL})
+            message("Searching for library " ${tempf})
+            find_library(LIBUNIT_TEST_PP_LOCATION add_unittestpp NAMES ${tempf})
+            if(NOT LIBUNIT_TEST_PP_LOCATION)
+                message("FATAL ERROR: Could not find " ${tempf} "!")
+            else()
+                message("Found library " ${tempf})
+                target_link_libraries(${PROGRAM_NAME} ${LIBUNIT_TEST_PP_LOCATION})
+            endif()
+        endforeach()
+    endif()
+endmacro(add_additional_libs)
 
 #adds ncurses library
 macro(add_ncurses)
@@ -201,7 +221,17 @@ if(USING_NCURSES_LIBRARY)
     endforeach(temp2)
 endif()
 
+if(USING_ADDITIONAL_LIBS)
+    foreach(temp1 ${ADDITIONAL_LIB_COMPONENTS_LITERAL})
+        add_definitions(-l:${temp1})
+    endforeach(temp1)
+endif()
+
 add_files()
+
+if(USING_ADDITIONAL_LIBS)
+    add_additional_libs()
+endif()
 
 if(USING_NCURSES_LIBRARY)
     add_ncurses()

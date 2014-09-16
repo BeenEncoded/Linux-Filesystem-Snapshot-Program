@@ -14,6 +14,7 @@ using fsys::is_folder;
 using fsys::is_symlink;
 using fsys::tree_riterator_class;
 using std::string;
+using fsys::pref_slash;
 
 namespace
 {
@@ -63,6 +64,12 @@ namespace snapshot
         return (current_path().make_preferred().string() + 
                 boost::filesystem::path("/").make_preferred().string() + 
                 fsyssnap_SNAPSHOT_FOLDER_NAME);
+    }
+    
+    std::string snapshot_path(const unsigned long long& id)
+    {
+        return std::string(snapshot_folder() + pref_slash() + std::string("snapshot") + 
+                        std::to_string(id) + std::string(fsyssnap_SNAPSHOT_FILE_EXTENSION));
     }
     
     
