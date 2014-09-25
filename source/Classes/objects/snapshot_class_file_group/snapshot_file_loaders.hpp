@@ -21,7 +21,6 @@ namespace snapshot
     std::unordered_set<std::string> load_paths_from_snapshot(const snapshot::snapshot_data&);
     unsigned long long new_snapshot_id();
     std::vector<snapshot::snapshot_data> list_snapshot_info(const std::string&);
-    std::istream& retrieve_info(std::istream&, snapshot::snapshot_data&);
     
 }
 

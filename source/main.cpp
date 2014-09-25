@@ -24,7 +24,6 @@ namespace
     }
 }
 
-//cur_pos figure out how to link multi-threading
 int main(__attribute__((unused)) int c, __attribute__((unused)) char **v)
 {
     main_menu();

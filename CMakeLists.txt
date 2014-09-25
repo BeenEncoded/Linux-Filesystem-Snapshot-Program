@@ -112,6 +112,14 @@ macro(add_mthread)
     endif()
 endmacro(add_mthread)
 
+macro(link_mthread)
+    if(CPLUSPLUS_11)
+        if(ENABLE_MULTITHREADING)
+            target_link_libraries(${PROGRAM_NAME} pthread)
+        endif()
+    endif()
+endmacro(link_mthread)
+
 #adds optimization flags
 macro(add_build_optimizations)
     if(BUILD_RELEASE)
@@ -239,6 +247,8 @@ endif()
 add_mthread()
 
 add_files()
+
+link_mthread()
 
 if(USING_ADDITIONAL_LIBS)
     add_additional_libs()

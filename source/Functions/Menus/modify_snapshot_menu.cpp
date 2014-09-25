@@ -14,6 +14,7 @@
 #include "filesystem.hpp"
 #include "date_class.hpp"
 #include "common_menu.hpp"
+#include "filesystem.hpp"
 
 using common_menu::menu_return_data;
 using snapshot::snapshot_data;
@@ -28,6 +29,10 @@ using std::unordered_set;
 namespace
 {
     void display_help();
+    bool remove_snapshot(const snapshot::snapshot_data&);
+    std::string display_snap_time(const snapshot::snapshot_data&);
+    void diff_snapshots(const unsigned long long&, const unsigned long long&);
+    bool more_recent_than(const unsigned long long&, const unsigned long long&);
     
     
     
@@ -48,6 +53,58 @@ namespace
         cout<< " \'n\'         -  New Snapshot"<< endl;
         cout<< " \'e\'         -  Exit"<< endl;
         common::wait();
+    }
+    
+    inline bool remove_snapshot(const snapshot::snapshot_data& snap)
+    {
+        using fsys::is_folder;
+        using fsys::is_file;
+        using fsys::is_symlink;
+        using fsys::can_delete;
+        using fsys::fdelete;
+        using snapshot::snapshot_folder;
+        using snapshot::snapshot_path;
+        
+        if(is_folder(snapshot_folder()).value && !is_symlink(snapshot_folder()).value)
+        {
+            if(is_file(snapshot_path(snap.id)).value)
+            {
+                if(can_delete(snapshot_path(snap.id)))
+                {
+                    return fdelete(snapshot_path(snap.id)).value;
+                }
+            }
+        }
+        return false;
+    }
+    
+    inline std::string display_snap_time(const snapshot::snapshot_data& snap)
+    {
+        std::string temps;
+        
+        if(snap.hour > 12) temps += std::to_string(snap.hour % 12);
+        else if(snap.hour == 0) temps += "12";
+        else temps += std::to_string(snap.hour);
+        
+        temps += ":";
+        if(snap.minute < 10) temps += '0';
+        temps += std::to_string(snap.minute);
+        temps += ":";
+        if(snap.second < 10) temps += '0';
+        temps += (std::to_string(snap.second) + " ");
+        temps += ((snap.hour > 11) ? "pm" : "am");
+        return temps;
+    }
+    
+    inline bool more_recent_than(const unsigned long long& id1, const unsigned long long& id2)
+    {
+        ifstream in;
+        bool isrec(false);
+        
+    }
+    
+    inline void diff_snapshots(const unsigned long long& id1, const unsigned long long& id2)
+    {
     }
     
     
@@ -71,10 +128,10 @@ namespace snapshot_menu
         auto update_display = [&snapshots, &display](void)->void
         {
             display.clear();
-            for(std::vector<snapshot_data>::const_iterator it = snapshots.begin(); 
-                    it != snapshots.end(); ++it)
+            for(unsigned int x = 0; x < snapshots.size(); x++)
             {
-                display.push_back(date::display(it->timestamp));
+                display.push_back(date::display(snapshots[x].timestamp) + " at " + 
+                                display_snap_time(snapshots[x]) + "   root: \"" + snapshots[x].root + "\"");
             }
         };
         
@@ -117,7 +174,10 @@ namespace snapshot_menu
                         {
                             if(!snapshots.empty())
                             {
-                                snapshots.erase(snapshots.begin() + window.gpos().whole);
+                                if(remove_snapshot(snapshots.at(window.gpos().whole))) 
+                                {
+                                    snapshots.erase(snapshots.begin() + window.gpos().whole);
+                                }
                             }
                             update_display();
                         }

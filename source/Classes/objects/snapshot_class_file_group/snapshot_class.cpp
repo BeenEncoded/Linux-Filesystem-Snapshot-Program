@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <thread>
+#include <ctime>
 #include <fstream>
 
 #include "snapshot_class.hpp"
@@ -51,7 +52,7 @@ namespace
         while(!pd->finished && !pd->canceled)
         {
             display_current_status(*pd);
-            std::this_thread::sleep_for(std::chrono::milliseconds(333));
+            std::this_thread::sleep_for(std::chrono::milliseconds(33));
             if(common::kbhit())
             {
                 pd->paused = true;
@@ -77,9 +78,12 @@ namespace
     
     void construct_tsproc_data(take_snapshot_proc_data& pd, const std::string& rt)
     {
-        date::date_val temptime;
+        snapshot::snapshot_data head;
         
-        temptime = common::get_time();
+        if(!fsys::is_folder(snapshot::snapshot_folder()))
+        {
+            if(!fsys::create_folder(snapshot::snapshot_folder()).value) return;
+        }
         pd.root = rt;
         pd.sid = snapshot::new_snapshot_id();
         pd.save_file = snapshot::snapshot_path(pd.sid);
@@ -88,10 +92,12 @@ namespace
         pd.paused = false;
         pd.count = 0;
         pd.current_path = "";
+        
+        head.take_time();
+        head.root = pd.root;
+        head.id = pd.sid;
         pd.out.open(pd.save_file.c_str(), std::ios::binary);
-        pd.out<< temptime;
-        pd.out<< pd.sid<< mem_delim::value;
-        pd.out<< pd.root<< mem_delim::value;
+        snapshot::out_header(pd.out, head);
     }
     
     
@@ -104,9 +110,7 @@ namespace snapshot
     {
         if(out.good())
         {
-            out<< snap.timestamp;
-            out<< snap.id<< mem_delim::value;
-            out<< snap.root<< mem_delim::value;
+            out_header(out, snap);
             for(std::vector<std::string>::const_iterator it = snap.paths.begin(); 
                     it != snap.paths.end(); ++it)
             {
@@ -131,12 +135,7 @@ namespace snapshot
         
         if(in.good())
         {
-            in>> snap.timestamp;
-            
-            if(safe_getline(in, snap.id, mem_delim::value))
-            {
-                safe_getline(in, snap.root, mem_delim::value);
-            }
+            in_header(in, snap);
             while(in.good() && (in.peek() != struct_delim::value) && (in.peek() != EOF))
             {
                 if(safe_getline(in, temps, mem_delim::value)) snap.paths.push_back(temps);
@@ -164,6 +163,8 @@ namespace snapshot
             
             this->timestamp = snap.timestamp;
             this->id = snap.id;
+            this->hour = snap.hour;
+            this->minute = snap.minute;
         }
         return *this;
     }
@@ -174,12 +175,52 @@ namespace snapshot
                 (this->paths == snap.paths) && 
                 (this->id == snap.id) && 
                 (this->root == snap.root) && 
-                (this->timestamp == snap.timestamp));
+                (this->timestamp == snap.timestamp) && 
+                (this->hour == snap.hour) && 
+                (this->minute == snap.minute) &&
+                (this->second == snap.second));
     }
     
     bool snapshot_data::operator!=(const snapshot_data& snap) const
     {
         return !(this->operator==(snap));
+    }
+    
+    bool snapshot_data::operator<(const snapshot_data& s) const
+    {
+        bool lessthan(false);
+        if(this->timestamp < s.timestamp)
+        {
+            lessthan = true;
+        }
+        else if(this->timestamp == s.timestamp)
+        {
+            if(this->hour < s.hour)
+            {
+                lessthan = true;
+            }
+            else if(this->hour == s.hour)
+            {
+                if(this->minute < s.minute)
+                {
+                    lessthan = true;
+                }
+                else if(this->minute == s.minute)
+                {
+                    if(this->second < s.second) lessthan = true;
+                }
+            }
+        }
+        return lessthan;
+    }
+    
+    void snapshot_data::take_time()
+    {
+        struct tm t(common::get_time());
+        this->timestamp = t;
+        this->hour = t.tm_hour;
+        this->minute = t.tm_min;
+        this->second = t.tm_sec;
     }
     
     
@@ -215,6 +256,46 @@ namespace snapshot
         id = pd->sid;
         delete pd;
         return id;
+    }
+    
+    std::ostream& out_header(std::ostream& out, const snapshot_data& snap)
+    {
+        if(out.good())
+        {
+            out<< snap.timestamp;
+            out<< snap.hour<< mem_delim::value;
+            out<< snap.minute<< mem_delim::value;
+            out<< snap.second<< mem_delim::value;
+            out<< snap.id<< mem_delim::value;
+            out<< snap.root<< mem_delim::value;
+        }
+        return out;
+    }
+    
+    std::istream& in_header(std::istream& in, snapshot_data& snap)
+    {
+        using common::safe_getline;
+        
+        in.peek();
+        if(in.good())
+        {
+            in>> snap.timestamp;
+            if(safe_getline(in, snap.hour, mem_delim::value))
+            {
+                if(safe_getline(in, snap.minute, mem_delim::value))
+                {
+                    if(safe_getline(in, snap.second, mem_delim::value))
+                    {
+                        if(safe_getline(in, snap.id, mem_delim::value))
+                        {
+                            safe_getline(in, snap.root, mem_delim::value);
+                        }
+                    }
+                }
+            }
+        }
+        in.peek();
+        return in;
     }
     
     

@@ -9,6 +9,7 @@
 #include "filesystem.hpp"
 #include "global_defines.hpp"
 #include "common.hpp"
+#include "snapshot_class.hpp"
 
 using boost::filesystem::current_path;
 using fsys::is_file;
@@ -186,7 +187,7 @@ paths.insert(*it) > failed to insert"<< std::endl;
                     if(in.good())
                     {
                         snapshot_list.push_back(snapshot_data());
-                        snapshot::retrieve_info(in, snapshot_list.back());
+                        in_header(in, snapshot_list.back());
                     }
                     in.close();
                 }
@@ -195,25 +196,6 @@ paths.insert(*it) > failed to insert"<< std::endl;
         files.clear();
         files.shrink_to_fit();
         return snapshot_list;
-    }
-    
-    /* Retrieves the header info on a snapshot.  Can be used to avoid loading
-     huge number of paths at once. */
-    std::istream& retrieve_info(std::istream& in, snapshot_data& snap)
-    {
-        using common::safe_getline;
-        
-        snap.id = 0;
-        snap.root.erase();
-        snap.timestamp = date::date_val();
-        
-        if(in.good())
-        {
-            in>> snap.timestamp;
-            if(safe_getline(in, snap.id, mem_delim::value))
-                safe_getline(in, snap.root, mem_delim::value);
-        }
-        return in;
     }
     
     
