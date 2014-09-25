@@ -169,7 +169,7 @@ namespace date
         return (this->operator<(d) || this->operator==(d));
     }
 
-    /* Converts this time into a tm structure (using a pre-existing one, 
+    /** Converts this time into a tm structure (using a pre-existing one, 
      for flexibility). */
     void date_val::to_tm(struct tm& i) const
     {
@@ -183,7 +183,6 @@ namespace date
 
     /** All operators add/subract a specified number of days
      to or from the date. */
-
     date_val date_val::operator++(__attribute__((unused)) int i)
     {
         *this = (*this + 1);

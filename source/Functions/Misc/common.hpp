@@ -5,6 +5,7 @@
 #include <vector>
 #include <ctime>
 #include <sstream>
+#include <unordered_set>
 
 #include "global_defines.hpp"
 #include "scroll_display.hpp"
@@ -28,7 +29,8 @@ namespace common
             
             if(in.good())
             {
-                if(std::getline(in, temps, delimiter).good())
+                std::getline(in, temps, delimiter);
+                if(in.good())
                 {
                     std::stringstream ss;
                     ss<< temps;
@@ -41,8 +43,6 @@ namespace common
                      but somwhere there was a big mistake... the program will
                      now attempt to salvage the situation: */
                     in.seekg(previous_position);
-                    in.clear();
-                    in.peek();
                     success = false;
                 }
             }
@@ -59,15 +59,14 @@ namespace common
             
             if(in.good())
             {
-                if(std::getline(in, s, delimiter).good()) success = true;
+                std::getline(in, s, delimiter);
+                if(in.good()) success = true;
                 else if(!in.eof() && in.fail())
                 {
                     /* So, here we are: we didn't reach the end of the file, 
                      but somwhere there was a big mistake... the program will
                      now attempt to salvage the situation: */
                     in.seekg(previous_position);
-                    in.clear();
-                    in.peek(); //peek.  This will set any bad states if the stream is still bad.
                     success = false;
                 }
             }
@@ -79,6 +78,7 @@ namespace common
     
     void cls();
     void cl();
+    bool kbhit();
     key_code::key_code_data gkey();
     key_code::key_code_data gkey_funct();
     key_code::key_code_data getch_funct();

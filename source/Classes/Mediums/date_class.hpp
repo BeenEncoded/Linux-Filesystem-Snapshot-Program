@@ -5,7 +5,6 @@
 
 #define YDAYS(year) (__isleap(year) ? 366 : 365)
 
-//testing required
 namespace date
 {
     struct date_val;

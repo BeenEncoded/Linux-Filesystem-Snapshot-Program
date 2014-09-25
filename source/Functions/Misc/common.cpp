@@ -44,6 +44,11 @@ namespace common
         input::cl();
     }
     
+    bool kbhit()
+    {
+        return input::kbhit();
+    }
+    
     key_code::key_code_data gkey()
     {
         input::cl();

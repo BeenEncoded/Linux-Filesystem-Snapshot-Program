@@ -36,6 +36,7 @@ set(SOURCE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 #compiler flag settings
 set(BUILD_RELEASE false) #default debug
+set(ENABLE_MULTITHREADING true)
 set(CPLUSPLUS_11 true)
 set(C_11 true)
 set(STRICT_COMPILE true)
@@ -103,6 +104,14 @@ macro(set_static)
     add_definitions(-static)
 endmacro(set_static)
 
+macro(add_mthread)
+    if(CPLUSPLUS_11)
+        if(ENABLE_MULTITHREADING)
+            add_definitions(-pthread -Wl,--no-as-needed)
+        endif()
+    endif()
+endmacro(add_mthread)
+
 #adds optimization flags
 macro(add_build_optimizations)
     if(BUILD_RELEASE)
@@ -112,8 +121,8 @@ endmacro(add_build_optimizations)
 
 #adds boost library
 macro(add_boost)
-    set(Boost_USE_STATIC_LIBS ON) 
-    set(Boost_USE_MULTITHREADED OFF)  
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_MULTITHREADED ON)
     set(Boost_USE_STATIC_RUNTIME ON)
     find_package(Boost REQUIRED COMPONENTS ${BOOST_LIB_COMPONENTS})
     if(Boost_FOUND)
@@ -226,6 +235,8 @@ if(USING_ADDITIONAL_LIBS)
         add_definitions(-l:${temp1})
     endforeach(temp1)
 endif()
+
+add_mthread()
 
 add_files()
 

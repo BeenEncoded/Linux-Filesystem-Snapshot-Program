@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <ctime>
 
 #include "date_class.hpp"
@@ -11,11 +12,8 @@ namespace snapshot
 {
     struct snapshot_data;
     
-    
     std::istream& operator>>(std::istream&, snapshot_data&);
     std::ostream& operator<<(std::ostream&, const snapshot_data&);
-    
-    std::istream& retrieve_info(std::istream&, snapshot_data&);
     
     struct snapshot_data
     {
@@ -28,6 +26,8 @@ namespace snapshot
         date::date_val timestamp;
         unsigned long long id = 0;
     };
+    
+    unsigned long long take_snapshot(const std::string&);
     
 }
 

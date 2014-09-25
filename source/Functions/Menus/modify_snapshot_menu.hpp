@@ -1,5 +1,8 @@
 #ifndef MODIFY_SNAPSHOT_MENU_HPP_INCLUDED
 #define MODIFY_SNAPSHOT_MENU_HPP_INCLUDED
+#include <vector>
+#include <string>
+
 #include "snapshot_class.hpp"
 #include "common_menu.hpp"
 

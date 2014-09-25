@@ -19,6 +19,7 @@ using common_menu::menu_return_data;
 using snapshot::snapshot_data;
 using std::cout;
 using std::endl;
+using std::cerr;
 using std::vector;
 using std::string;
 using std::unordered_set;
@@ -26,90 +27,9 @@ using std::unordered_set;
 
 namespace
 {
-    bool load_snapshot(snapshot_data&, const string&);
-    vector<snapshot_data> list_snapshot_info(const string&);
-    unsigned long long new_snapshot_id();
-    unordered_set<unsigned long long> extract_ids(const vector<snapshot_data>&);
     void display_help();
     
     
-    
-    inline bool load_snapshot(snapshot_data& snap, const string& path)
-    {
-        using fsys::is_folder;
-        using fsys::is_file;
-        using fsys::is_symlink;
-        using std::ifstream;
-        
-        bool success(false);
-        ifstream in;
-        
-        snap = snapshot_data();
-        
-        if(is_file(path).value)
-        {
-            in.open(path.c_str(), std::ios::in);
-            if(in.good())
-            {
-                success = true;
-                in>> snap;
-            }
-            in.close();
-        }
-        return success;
-    }
-    
-    inline vector<snapshot_data> list_snapshot_info(const string& root)
-    {
-        using fsys::is_file;
-        
-        vector<string> files(snapshot::paths_of_extension(root, fsyssnap_SNAPSHOT_FILE_EXTENSION));
-        vector<snapshot_data> snapshot_list;
-        std::ifstream in;
-        
-        if(files.size() > 0)
-        {
-            for(vector<string>::const_iterator it = files.begin(); it != files.end(); ++it)
-            {
-                if(is_file(*it).value)
-                {
-                    in.open(it->c_str(), std::ios::in);
-                    if(in.good())
-                    {
-                        snapshot_list.push_back(snapshot_data());
-                        snapshot::retrieve_info(in, snapshot_list.back());
-                    }
-                    in.close();
-                }
-            }
-        }
-        files.clear();
-        files.shrink_to_fit();
-        return snapshot_list;
-    }
-    
-    inline unordered_set<unsigned long long> extract_ids(const vector<snapshot_data>&  snapshots)
-    {
-        unordered_set<unsigned long long> ids;
-        for(vector<snapshot_data>::const_iterator it = snapshots.begin(); it != snapshots.end(); ++it)
-        {
-            ids.insert(it->id);
-        }
-        return ids;
-    }
-    
-    inline unsigned long long new_snapshot_id()
-    {
-        unordered_set<unsigned long long> ids(extract_ids(
-                list_snapshot_info(snapshot::snapshot_folder())));
-        unsigned long long newid(1);
-        
-        if(!ids.empty())
-        {
-            while(ids.find(newid) != ids.end()) newid++;
-        }
-        return newid;
-    }
     
     inline void display_help()
     {
@@ -172,6 +92,7 @@ namespace snapshot_menu
             common_menu::display_scroll_window(window, display.size());
             
             for(unsigned int x = 0; x < 3; x++) cout<< endl;
+            cout<< " [SPC] -  Select"<< endl;
             cout<< " n -  NEW snapshot"<< endl;
             cout<< " e -  Exit"<< endl;
             
@@ -217,7 +138,29 @@ namespace snapshot_menu
                         {
                             if(common::inp::is_sure("Do you really want to take a snapshot?"))
                             {
-                                //TODO add new snapshot && save
+                                using std::cout;
+                                using std::endl;
+                                using std::cin;
+                                
+                                std::string temps;
+                                
+                                common::cls();
+                                cout<< "Enter nothing to cancel"<< endl;
+                                for(unsigned int x = 0; x < 3; x++) cout<< endl;
+                                cout<< "Enter a root folder to scan: ";
+                                std::getline(cin, temps, '\n');
+                                if(!temps.empty())
+                                {
+                                    if(fsys::is_folder(temps).value && !fsys::is_symlink(temps).value)
+                                    {
+                                        if(snapshot::take_snapshot(temps) != 0)
+                                        {
+                                            snapshots.clear();
+                                            snapshots.shrink_to_fit();
+                                            snapshots = snapshot::list_snapshot_info(snapshot::snapshot_folder());
+                                        }
+                                    }
+                                }
                                 update_display();
                             }
                         }

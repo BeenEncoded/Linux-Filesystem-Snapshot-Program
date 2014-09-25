@@ -61,7 +61,7 @@ namespace
     
     inline void display_bottom_border(scrollDisplay::scroll_display_class& win, const unsigned int& size)
     {
-        unsigned int from_end((size - (win.window_beg() + win.window_size())));
+        unsigned int from_end((size - (win.window_beg() + win.window().size())));
         for(unsigned int x = 0; x < ((unsigned int)win.window_size() - win.window().size()); x++)
         {
             cout<< endl;

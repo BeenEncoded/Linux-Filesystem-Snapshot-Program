@@ -1,6 +1,8 @@
 #ifndef GLOBAL_DEFINES_HPP_INCLUDED
 #define GLOBAL_DEFINES_HPP_INCLUDED
 #include <vector>
+#include <iostream>
+#include <string>
 
 #define LETTERS "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
 #define NUMBERS "1234567890"
@@ -13,7 +15,6 @@
 //snapshot folder (snap_):
 #define fsyssnap_SNAPSHOT_FOLDER_NAME "snapshots"
 #define fsyssnap_SNAPSHOT_FILE_EXTENSION ".snap"
-
 
 /** FILESYSTEM reading constants END */
 
@@ -42,8 +43,11 @@ typedef const_int_type<8> v_center;
 
 namespace key_code
 {
-    struct key_code_data;
+    class key_code_data;
     
+    std::ostream& operator<<(std::ostream&, const key_code_data&);
+    
+    //todo eliminate unions from this object
     class key_code_data
     {
     public:
@@ -103,10 +107,12 @@ namespace key_code
         typedef const_int_type<23> f12;
     }
     
+    std::vector<key_code::key_code_data> construct_keys();
+    
     /* A vector containing all the key codes.  Can be changed if necessary.
      I was thinking about adding a "calibration" menu or somthing in case
      the key codes change.*/
-    extern std::vector<key_code_data> keys;
+    static const std::vector<key_code_data> keys(construct_keys());
     
     bool is_control(const key_code_data&);
     bool might_be_control(const key_code_data&);

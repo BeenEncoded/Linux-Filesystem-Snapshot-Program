@@ -51,7 +51,7 @@ namespace common_menu
     namespace snapshot
     {
         bool save_snapshot(const ::snapshot::snapshot_data&);
-        //todo load snapshot of a specified id
+        
     }
     
 }

@@ -19,6 +19,7 @@ namespace
     std::string parent_path(const std::string&);
     bool is_child(const std::string&, const std::string&);
     std::string construct_new_path(const std::string&, const std::string&, const std::string&);
+    fsys::result_data_boolean is_empty(const std::string&);
     
     
     
@@ -406,6 +407,38 @@ namespace
         return newpath;
     }
     
+    inline fsys::result_data_boolean is_empty(const std::string& s)
+    {
+        using fsys::is_folder;
+        using fsys::is_symlink;
+        
+        fsys::result_data_boolean res;
+        boost::system::error_code ec;
+        
+        if(!is_folder(s).value)
+        {
+            res.value = false;
+            res.error = ("fsys::result_data_boolean is_empty(const std::string&) at line: " + 
+                            std::to_string(__LINE__) + ": \"" + s + "\" is not a folder!");
+        }
+        else if(is_folder(s).value && !is_symlink(s).value)
+        {
+            res.value = boost::filesystem::is_empty(boost::filesystem::path(s), ec);
+            if(is_error(ec))
+            {
+                res.value = false;
+                res.error = ec.message();
+            }
+        }
+        else
+        {
+            res.value = false;
+            res.error = "fsys::result_data_boolean is_empty(const std::string&): \
+unknown error occured!";
+        }
+        return res;
+    }
+    
     
 }
 
@@ -684,7 +717,7 @@ namespace fsys
     
     bool tree_riterator_class::at_end() const
     {
-        return (this->it == this->end);
+        return (this->it == boost::filesystem::recursive_directory_iterator());
     }
     
     /**
@@ -759,7 +792,8 @@ invalid path!  Args can only be a folder.";
                                 //only copy the parent path if it doesn't exist
                                 if(!is_folder(temps).value)
                                 {
-                                    this->err.value = copy_directories(this->p.string(), this->dest, parent_path(this->value()));
+                                    this->err.value = copy_directories(this->p.string(), 
+                                                    this->dest, parent_path(this->value()));
                                 }
                                 else this->err.value = true;
                             }
@@ -911,106 +945,116 @@ can not construct object with invalid pathname!  Path must be a folder!";
         return *this;
     }
     
-    /* Deletes the path that the iterator currently points to, and then increments
-     the iterator.  It will not delete empty folders, so this operator will reset
-     the iterator (as if re-initialized) once the end has been reached, and keep 
-     doing so until everything is deleted.  
-     aka:  it will delete the contents of the folders, before deleting
-     the folders. There is no way to track the number of passes (at present) this
-     operation takes, but for a folder with contents, 2 passes is minimum.*/
+    /* Deletes the path that the iterator currently points to, and then reconstructs
+     * the iterator.  Due to the nature of the operation, we can't delete the
+     * path the iterator is pointing to and reliably continue iteration
+     * with garuntee of the iterator's validity.  Each iteration
+     * consists of constructing a new iterator, and iterating to the next path
+     * that can be deleted as determined by ::can_delete(const std::string&), 
+     * and deleting that path.  After that is done, the iterator is 
+     * reconstructed to maintain validity. */
     tree_riterator_class delete_iterator_class::operator++()
     {
+        boost::system::error_code ec;
+        
         this->err.value = false;
         this->err.error.erase();
-        std::string temps(this->it->path().string());
-        if(this->it != this->end)
+        
+        //check if we can delete the top directory:
+        if(can_delete(this->p.string()))
         {
-            /* Attempt to delete the path */
-            try
+            this->err.value = (std::remove(this->p.string().c_str()) == 0);
+            if(!this->err.value)
             {
-                if(is_folder(temps).value && !is_symlink(temps).value)
+                this->err.error = ("tree_riterator_class delete_iterator_class::\
+operator++() line " + std::to_string(__LINE__) + ": could not delete \"" + 
+                                this->p.string() + "\"!");
+            }
+            return *this;
+        }
+        
+        try
+        {
+            if(is_folder(this->p.string()).value && !is_symlink(this->p.string()).value)
+            {
+                try
                 {
-                    boost::system::error_code ec;
-                    this->err.value = true;
-                    if(boost::filesystem::is_empty(this->it->path(), ec))
+                    if(is_empty(this->p.string()).value)
                     {
-                        std::remove(temps.c_str());
-                        if(is_folder(temps).value)
+                        this->err.value = (std::remove(this->p.string().c_str()) == 0);
+                        if(!this->err.value)
                         {
-                            this->err.value = false;
-                            this->err.error = ("\"" + temps + "\"\nREASON: Unknown; path\
-registered as empty, but removal failed.");
+                            this->err.error = "tree_riterator_class delete_iterator_class::operator++(): \
+error: couldn't delete the folder!";
                         }
                     }
-                    if(is_error(ec))
+                    else
                     {
-                        this->err.value = false;
-                        this->err.error = ec.message();
-                    }
-                }
-                else if(is_file(temps).value || is_symlink(temps).value)
-                {
-                    
-                    this->err.value = (std::remove(temps.c_str()) == 0);
-                    if(is_file(temps).value || is_symlink(temps).value)
-                    {
-                        this->err.value = false;
-                        this->err.error = ("\"" + temps + "\"\nREASON: attempted removal, \
-but did not succeed.  Reason for failure is unknown; file persists.");
-                    }
-                }
-                else
-                {
-                    this->err.value = false;
-                    this->err.error = ("\"" + temps + "\"\nREASON: Unknown, ident\
-ity of path could not be established.  No action could be taken.");
-                }
-            }
-            catch(...)
-            {
-                throw;
-            }
-            
-            /* Move on to the next path */
-            try
-            {
-                tree_riterator_class::operator++();
-                if(this->at_end())
-                {
-                    boost::system::error_code ec;
-                    switch(!boost::filesystem::is_empty(this->p, ec))
-                    {
-                        case true:
+                        this->it = init_directory_rec_iterator(this->p);
+                        while(this->it != this->end)
                         {
-                            this->it = init_directory_rec_iterator(this->p);
-                            this->err.value = true;
+                            if(can_delete(this->it->path().string())) break;
+                            tree_riterator_class::operator++();
                         }
-                        break;
-                        
-                        case false:
+                        if(this->it != this->end)
                         {
-                            boost::filesystem::remove_all(this->p, ec);
-                            this->err.value = true;
-                            if(is_error(ec))
+                            if(can_delete(this->it->path().string()))
+                            {
+                                this->err.value = (std::remove(this->it->path().string().c_str()) == 0);
+                                if(!this->err.value)
+                                {
+                                    this->err.error = ("tree_riterator_class delete_iterator_class::operator++() \
+line " + std::to_string(__LINE__) + ": std::remove() failed!");
+                                }
+                            }
+                            else
                             {
                                 this->err.value = false;
-                                this->err.error = ec.message();
+                                this->err.error = ("tree_riterator_class delete_iterator_class::operator++() \
+unknown error: can_delete returned false for un-completed delete_iterator!");
                             }
                         }
-                        break;
-                        
-                        default:
-                        {
-                        }
-                        break;
+                    }
+                }
+                catch(...)
+                {
+                    throw;
+                }
+            }
+            else
+            {
+                this->err.value = true;
+            }
+        }
+        catch(...)
+        {
+            throw;
+        }
+        
+        try
+        {
+            /* The iterator should still be valid after this operation, but
+             * the only way this can be garunteed is if we completely reconstruct it: */
+            this->it = init_directory_rec_iterator(this->p);
+            if(this->it == this->end)
+            {
+                if(can_delete(this->p.string()))
+                {
+                    this->err.value = (std::remove(this->p.string().c_str()) == 0);
+                    if(!this->err.value)
+                    {
+                        this->err.error = ("tree_riterator_class delete_iterator\
+_class::operator++()  line " + std::to_string(__LINE__) + ": could not delete \"" + 
+                                    this->p.string() + "\"!");
                     }
                 }
             }
-            catch(...)
-            {
-                throw;
-            }
         }
+        catch(...)
+        {
+            throw;
+        }
+        
         return *this;
     }
     
@@ -1340,6 +1384,33 @@ ation failed!");
         return result;
     }
     
+    /* Returns true if the path is an empty folder or a file.  Any path that
+     * this returns true for should return success for std::remove(). */
+    bool can_delete(const std::string& s)
+    {
+        using fsys::is_folder;
+        using fsys::is_file;
+        using fsys::is_symlink;
+        
+        bool tempb(false);
+        
+        try
+        {
+            tempb = (is_symlink(s).value || is_file(s).value);
+            if(!tempb)
+            {
+                if(is_folder(s).value && !is_symlink(s).value)
+                {
+                    tempb = is_empty(s).value;
+                }
+            }
+        }
+        catch(...)
+        {
+            throw;
+        }
+        return tempb;
+    }
     
     /* This operates exactly like boost::filesystem::copy_directory(), except
      * that it copies a subdirectory of the source, and any of it's parent paths

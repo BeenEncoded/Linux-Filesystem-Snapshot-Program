@@ -59,7 +59,7 @@ namespace fsys
             return !(this->value);
         }
         
-        bool value = false;
+        bool value = true;
         std::string error;
     };
     
@@ -165,6 +165,7 @@ namespace fsys
     result_data_boolean create_folder(const std::string&);
     result_data_boolean frename(const std::string&, const std::string&);
     result_data_boolean fmove(const std::string&, const std::string&);
+    bool can_delete(const std::string&);
     char pref_slash();
     
     /* Returns a string that represents a group of characters that should
