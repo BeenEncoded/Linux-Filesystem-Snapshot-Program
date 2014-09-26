@@ -5,7 +5,7 @@
 namespace multithread
 {
     
-    
+    //todo complete this
     template<typename type>
     class shared_thread
     {

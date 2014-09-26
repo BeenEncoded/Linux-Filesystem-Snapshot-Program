@@ -4,6 +4,7 @@
 #include <iostream>
 #include <boost/filesystem.hpp>
 #include <unordered_set>
+#include <ctime>
 
 #include "modify_snapshot_menu.hpp"
 #include "snapshot_file_loaders.hpp"
@@ -33,6 +34,9 @@ namespace
     std::string display_snap_time(const snapshot::snapshot_data&);
     void diff_snapshots(const unsigned long long&, const unsigned long long&);
     bool more_recent_than(const unsigned long long&, const unsigned long long&);
+    bool create_record_folder();
+    std::string record_folder();
+    std::string strtime(const struct tm&);
     
     
     
@@ -98,13 +102,80 @@ namespace
     
     inline bool more_recent_than(const unsigned long long& id1, const unsigned long long& id2)
     {
-        ifstream in;
-        bool isrec(false);
+        using snapshot::snapshot_path;
         
+        auto load_snap = [](const std::string& s)->snapshot::snapshot_data
+        {
+            snapshot::snapshot_data tempsnap;
+            std::ifstream in(s.c_str(), std::ios::binary);
+            if(in.good())
+            {
+                snapshot::in_header(in, tempsnap);
+            }
+            in.close();
+            return tempsnap;
+        };
+        
+        return (load_snap(snapshot_path(id1)) < load_snap(snapshot_path(id2)));
+    }
+    
+    inline std::string record_folder()
+    {
+        return std::string(snapshot::snapshot_folder() + fsys::pref_slash() + 
+                        std::string("records"));
+    }
+    
+    inline bool create_record_folder()
+    {
+        using fsys::is_folder;
+        using fsys::is_file;
+        using fsys::is_symlink;
+        using snapshot::snapshot_folder;
+        
+        std::string folder(record_folder());
+        
+        if(!is_folder(folder).value && !is_file(folder).value && !is_symlink(folder).value)
+        {
+            if(!is_folder(snapshot_folder()).value && !is_file(snapshot_folder()).value && 
+                            !is_symlink(snapshot_folder()).value)
+            {
+                if(!fsys::create_folder(snapshot_folder()).value) return false;
+            }
+            if(is_folder(snapshot_folder()).value && !is_symlink(snapshot_folder()).value)
+            {
+                fsys::create_folder(folder);
+            }
+        }
+        return (is_folder(folder).value && !is_symlink(folder).value);
+    }
+    
+    /** returns the time in the form of a string.  This is mainly for file-naming. */
+    inline std::string strtime(const struct tm& t)
+    {
+        std::string temps;
+        date::date_val tempdate;
+        unsigned int hour(t.tm_hour);
+        bool am(hour < 12);
+        
+        tempdate = t;
+        temps += date::display(tempdate);
+        temps += " at ";
+        if(am && (hour == 0))
+        {
+            hour = 12;
+        }
+        else if(!am && (hour > 12)) hour %= 12;
+        if(hour < 10) temps += '0';
+        temps += (std::to_string(hour) + ":");
+        if(t.tm_min < 10) temps += '0';
+        temps += (std::to_string(t.tm_min) + std::string(" ") + 
+                        (am ? "am" : "pm"));
+        return temps;
     }
     
     inline void diff_snapshots(const unsigned long long& id1, const unsigned long long& id2)
     {
+        //todo finish this... I want to write a diff object to handle it, though
     }
     
     
@@ -134,7 +205,6 @@ namespace snapshot_menu
                                 display_snap_time(snapshots[x]) + "   root: \"" + snapshots[x].root + "\"");
             }
         };
-        
         
         update_display();
         window.window_size() = common_menu::wsize::value;

@@ -186,6 +186,7 @@ namespace snapshot
         return !(this->operator==(snap));
     }
     
+    /** Returns true if this snapshot was taken before snap.*/
     bool snapshot_data::operator<(const snapshot_data& s) const
     {
         bool lessthan(false);
