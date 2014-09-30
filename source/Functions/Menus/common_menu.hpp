@@ -17,15 +17,23 @@ namespace common_menu
     struct menu_return_data;
     class selection_class;
     
-    struct menu_return_data
-    {
-        bool canceled = false, modified = false;
-    };
-    
     enum scroll_display_type
     {
         def = 0,
         multi_select = 1
+    };
+    
+    void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&);
+    
+    namespace snapshot
+    {
+        bool save_snapshot(const ::snapshot::snapshot_data&);
+        
+    }
+    
+    struct menu_return_data
+    {
+        bool canceled = false, modified = false;
     };
     
     class selection_class
@@ -46,13 +54,6 @@ namespace common_menu
         
     };
     
-    void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&);
-    
-    namespace snapshot
-    {
-        bool save_snapshot(const ::snapshot::snapshot_data&);
-        
-    }
     
 }
 

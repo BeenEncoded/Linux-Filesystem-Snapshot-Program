@@ -14,6 +14,12 @@
 
 namespace
 {
+    struct take_snapshot_proc_data;
+    
+    void construct_tsproc_data(take_snapshot_proc_data&, const std::string&);
+    void collect_snapshot(take_snapshot_proc_data*);
+    void show_process_output(take_snapshot_proc_data*);
+    void display_current_status(take_snapshot_proc_data&);
     
     /* Unifies and limits the scope of the data that is used between
      * the functions of collect_snapshot and show_process_output. */
@@ -24,12 +30,6 @@ namespace
         unsigned long long sid, count;
         std::ofstream out;
     };
-    
-    void construct_tsproc_data(take_snapshot_proc_data&, const std::string&);
-    void collect_snapshot(take_snapshot_proc_data*);
-    void show_process_output(take_snapshot_proc_data*);
-    void display_current_status(take_snapshot_proc_data&);
-    
     
     void collect_snapshot(take_snapshot_proc_data *pd)
     {

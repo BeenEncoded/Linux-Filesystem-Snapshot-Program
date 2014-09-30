@@ -15,6 +15,10 @@ namespace snapshot
     std::istream& operator>>(std::istream&, snapshot_data&);
     std::ostream& operator<<(std::ostream&, const snapshot_data&);
     
+    unsigned long long take_snapshot(const std::string&);
+    std::ostream& out_header(std::ostream&, const snapshot_data&);
+    std::istream& in_header(std::istream&, snapshot_data&);
+    
     struct snapshot_data
     {
         const snapshot_data& operator=(const snapshot_data&);
@@ -30,10 +34,6 @@ namespace snapshot
         unsigned int hour, minute, second;
         unsigned long long id = 0;
     };
-    
-    unsigned long long take_snapshot(const std::string&);
-    std::ostream& out_header(std::ostream&, const snapshot_data&);
-    std::istream& in_header(std::istream&, snapshot_data&);
     
 }
 
