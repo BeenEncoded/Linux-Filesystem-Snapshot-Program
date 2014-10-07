@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "common.hpp"
 #include "global_defines.hpp"
@@ -17,10 +18,12 @@ namespace
     void display_help();
     bool remove_snapshot(const snapshot::snapshot_data&);
     std::string display_time(const tdata::time_class&);
-    void diff_snapshots(const unsigned long long&, const unsigned long long&);
+    void diff_snapshots(const std::string&, const std::string&);
     bool create_record_folder();
     std::string record_folder();
     std::vector<snapshot::snapshot_data> load_all_headers(const std::string&);
+    std::vector<std::string> difference_between(const std::unordered_set<std::string>&, 
+                    const std::unordered_set<std::string>&);
     
     
     
@@ -115,9 +118,21 @@ namespace
         return (is_folder(folder).value && !is_symlink(folder).value);
     }
     
-    inline void diff_snapshots(const unsigned long long& id1 __attribute__((unused)), const unsigned long long& id2 __attribute__((unused)))
+    /** Returns a vector of strings containing the elements found in bef, but not in aft. */
+    std::vector<std::string> difference_between(const std::unordered_set<std::string>& bef, 
+                    const std::unordered_set<std::string>& aft)
     {
-        //todo finish this... I want to write a diff object to handle it, though
+        std::vector<std::string> diff;
+        for(std::unordered_set<std::string>::const_iterator it = bef.begin(); it != bef.end(); ++it)
+        {
+            if(aft.find(*it) == aft.end()) diff.push_back(*it);
+        }
+        return diff;
+    }
+    
+    inline void diff_snapshots(const std::string& file_bef, const std::string& file_aft)
+    {
+        //cur_pos finish diff algo and seection in menus
     }
     
     std::vector<snapshot::snapshot_data> load_all_headers(const std::string& folder)
@@ -165,6 +180,7 @@ namespace snapshot_menu
         std::vector<std::string> display;
         scrollDisplay::scroll_display_class window(display);
         key_code::key_code_data ch;
+        common_menu::selection_class selection;
         bool finished(false);
         
         auto update_display = [&snapshots, &display](void)->void
@@ -266,9 +282,24 @@ namespace snapshot_menu
                         }
                         break;
                         
+                        case '\n':
+                        {
+                            if(selection.count() == 2)
+                            {
+                                //todo diff selected snapshots
+                            }
+                        }
+                        break;
+                        
                         case ' ':
                         {
-                            //todo select snapshot to compare
+                            if(!snapshots.empty())
+                            {
+                                if((selection.count() < 2) && (!selection.is_selected(window.gpos().whole)))
+                                {
+                                    selection.add(window.gpos().whole);
+                                }
+                            }
                         }
                         break;
                         
