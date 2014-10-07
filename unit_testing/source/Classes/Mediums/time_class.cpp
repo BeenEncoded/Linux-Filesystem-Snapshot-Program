@@ -304,7 +304,6 @@ namespace tdata
             else if(this->cur_time.tm_min > 0) this->cur_time.tm_min--;
         }
         else if(this->cur_time.tm_sec > 0) this->cur_time.tm_sec--;
-        this->sync_to_yday();
         return *this;
     }
     
@@ -382,31 +381,23 @@ namespace tdata
     {
         using namespace t_const;
         
-        unsigned int tempyday(this->cur_time.tm_yday);
-        int target(i - 1900), tempi(0);
-        bool tempb(false);
+        int tempyday(this->cur_time.tm_yday), target(i - 1900);
         
+        if(__isleap((this->cur_time.tm_year + 1900)) && (tempyday == 365))
+        {
+            tempyday--;
+            (*this) = this->operator-(day::value);
+        }
         if(target < this->cur_time.tm_year)
         {
-            while(target < this->cur_time.tm_year)
-            {
-                tempb = (this->cur_time.tm_yday == 0);
-                if(tempb)
-                {
-                    tempi = this->cur_time.tm_year;
-                }
-                (*this) = this->operator-(day::value);
-                
-                //make sure that if the year fails to decrement, we don't get stuck in this loop!
-                if(tempb && (this->cur_time.tm_year == tempi)) break;
-            }
+            while(target < this->cur_time.tm_year) (*this) = this->operator-(day::value);
         }
         else if(target > this->cur_time.tm_year)
         {
             while(target > this->cur_time.tm_year) (*this) = this->operator+(day::value);
         }
-        this->cur_time.tm_yday = tempyday;
-        this->sync_to_yday();
+        while(this->cur_time.tm_yday != 0) (*this) = this->operator-(day::value);
+        while(this->cur_time.tm_yday != tempyday) (*this) = this->operator+(day::value);
     }
     
     /* Syncs the month and month day to the day of the year.  This allows
@@ -414,14 +405,14 @@ namespace tdata
      * month to the yday. */
     void time_class::sync_to_yday()
     {
-        this->cur_time.tm_mon = find_month_of_yday(this->cur_time.tm_yday, this->cur_time.tm_year);
+        this->cur_time.tm_mon = find_month_of_yday(this->cur_time.tm_yday, (this->cur_time.tm_year + 1900));
         if(this->cur_time.tm_mon == 0)
         {
             this->cur_time.tm_mday = (this->cur_time.tm_yday + 1);
         }
         else
         {
-            this->cur_time.tm_mday = ((this->cur_time.tm_yday + 1) - total_days_in_m((this->cur_time.tm_mon - 1), this->cur_time.tm_year));
+            this->cur_time.tm_mday = ((this->cur_time.tm_yday + 1) - total_days_in_m((this->cur_time.tm_mon - 1), (this->cur_time.tm_year + 1900)));
         }
     }
     
@@ -478,7 +469,7 @@ namespace tdata
         if(this->cur_time.tm_yday == 0)
         {
             this->cur_time.tm_year--;
-            this->cur_time.tm_yday = (__isleap(this->cur_time.tm_year) ? 365 : 364);
+            this->cur_time.tm_yday = (__isleap((this->cur_time.tm_year + 1900)) ? 365 : 364);
         }
         else if(this->cur_time.tm_yday > 0) this->cur_time.tm_yday--;
         this->sync_to_yday();
@@ -489,7 +480,7 @@ namespace tdata
         this->cur_time.tm_wday++;
         this->cur_time.tm_wday %= 7;
         this->cur_time.tm_yday++;
-        if(this->cur_time.tm_yday > (__isleap(this->cur_time.tm_year) ? 365 : 364))
+        if(this->cur_time.tm_yday > (__isleap((this->cur_time.tm_year + 1900)) ? 365 : 364))
         {
             this->cur_time.tm_yday = 0;
             this->cur_time.tm_year++;
@@ -505,6 +496,55 @@ namespace tdata
     const int& time_class::yday() const
     {
         return this->cur_time.tm_yday;
+    }
+    
+    void time_class::smonth(const int& x)
+    {
+        int tempi(x);
+        
+        auto add_month = [](time_class& t)->void
+        {
+            using namespace tdata::t_const;
+            using tdata::days_in_month;
+            
+            int mday(t.mday());
+            
+            if(mday > days_in_month(((t.month() + 1) % 12), t.gyear()))
+            {
+                mday %= days_in_month(((t.month() + 1) % 12), t.gyear());
+            }
+            if(t.mday() == 1) t += day::value;
+            while(t.mday() != 1) t += day::value;
+            while(t.mday() != mday) t += day::value;
+        };
+        
+        auto subtract_month = [](time_class& t)->void
+        {
+            using namespace tdata::t_const;
+            using tdata::days_in_month;
+            
+            int mday(t.mday());
+            
+            if(mday > days_in_month(((t.month() + 11) % 12), t.gyear()))
+            {
+                mday %= days_in_month(((t.month() + 11) % 12), t.gyear());
+            }
+            while(t.mday() != 1) t -= day::value;
+            t -= day::value;
+            while(t.mday() != mday) t -= day::value;
+        };
+        if(tempi < 0)
+        {
+            this->syear(this->gyear() - 1);
+            tempi = 11;
+        }
+        else if(tempi > 11)
+        {
+            this->syear(this->gyear() + 1);
+            tempi = 0;
+        }
+        while(this->cur_time.tm_mon != 0) subtract_month(*this);
+        while(this->cur_time.tm_mon != tempi) add_month(*this);
     }
     
     

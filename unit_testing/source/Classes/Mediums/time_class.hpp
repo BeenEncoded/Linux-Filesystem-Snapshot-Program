@@ -82,6 +82,7 @@ namespace tdata
         bool am() const;
         int gyear() const;
         void syear(const int&);
+        void smonth(const int&);
         std::string month_name() const;
         std::string wday_name() const;
         

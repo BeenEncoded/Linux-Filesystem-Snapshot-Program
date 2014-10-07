@@ -29,7 +29,6 @@ namespace
     void change_time_menu(tdata::time_class&);
     std::string selected_date_display(const tdata::time_class&, const int&);
     void add_to_selected(tdata::time_class&, const int&, const bool&);
-    void add_months(tdata::time_class&, const int&);
     
     
     inline void display_time(const tdata::time_class& t)
@@ -64,48 +63,6 @@ namespace
         return temps;
     }
     
-    inline void add_months(tdata::time_class& t, const int& i)
-    {
-        using namespace tdata::t_const;
-        using tdata::days_in_month;
-        
-        int tempi(i);
-        
-        auto add_month = [&t]()->void
-        {
-            using namespace tdata::t_const;
-            using tdata::days_in_month;
-            
-            int mday(t.mday());
-            
-            if(mday > days_in_month(((t.month() + 1) % 12), t.gyear()))
-            {
-                mday %= days_in_month(((t.month() + 1) % 12), t.gyear());
-            }
-            while(t.mday() != 1) t += day::value;
-            while(t.mday() != mday) t += day::value;
-        };
-        
-        auto subtract_month = [&t]()->void
-        {
-            using namespace tdata::t_const;
-            using tdata::days_in_month;
-            
-            int mday(t.mday());
-            
-            if(mday > days_in_month(((t.month() + 11) % 12), t.gyear()))
-            {
-                mday %= days_in_month(((t.month() + 11) % 12), t.gyear());
-            }
-            while(t.mday() != 1) t -= day::value;
-            t -= day::value;
-            while(t.mday() != mday) t -= day::value;
-        };
-        
-        if(tempi < 0) tempi *= (-1);
-        for(int x = 0; x < tempi; x++) ((i < 0) ? subtract_month() : add_month());
-    }
-    
     inline void add_to_selected(tdata::time_class& t, const int& selected, const bool& add)
     {
         using namespace tdata::t_const;
@@ -127,8 +84,8 @@ namespace
             
             case 2: 
             {
-                if(add) add_months(t, 1);
-                else add_months(t, -1);
+                if(add) t.smonth(0);
+                else t.smonth(11);
             }
             break;
             
@@ -161,6 +118,8 @@ namespace
             common::cls();
             for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
             common::center(selected_date_display(t, selected));
+            
+            cout<< "    (isleap = "<< (__isleap(t.gyear()) ? "true" : "false")<< ")"<< endl;
             
             key = common::gkey_funct();
             switch(key_code::is_listed_control(key))
@@ -238,7 +197,7 @@ int main(__attribute__((unused)) int c, __attribute__((unused)) char **v)
 {
     srand(std::time(NULL));
     tdata::time_class t(tdata::current_time());
-    t.syear(2);
+    t.syear(2014);
     change_time_menu(t);
     return 0;
 }

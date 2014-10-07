@@ -113,12 +113,6 @@ namespace key_code
     }
     
     
-    /* A vector containing all the key codes.  Can be changed if necessary.
-     I was thinking about adding a "calibration" menu or somthing in case
-     the key codes change.*/
-     //todo make this extern std::vector again...
-    
-    
 }
 
 #endif
