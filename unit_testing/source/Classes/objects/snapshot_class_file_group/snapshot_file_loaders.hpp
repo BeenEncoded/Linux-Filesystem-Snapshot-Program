@@ -9,6 +9,12 @@
  * Loads snapshot information.  This is specific to the filesystem, 
  * and is put here as a means to centralize all filesystem operations
  * regarding snapshot files to one, obvious location.
+ * 
+ * USE:
+ * 
+ * IDs and their respective paths are loaded into a map.  Each snapshot
+ * should have a unique id.  Snapshot information should be loaded by
+ * using it's id to get it's path.
  */
 namespace snapshot
 {
