@@ -383,12 +383,23 @@ namespace tdata
         using namespace t_const;
         
         unsigned int tempyday(this->cur_time.tm_yday);
-        int target(i - 1900);
+        int target(i - 1900), tempi(0);
+        bool tempb(false);
         
         if(target < this->cur_time.tm_year)
         {
-            //todo add minimum year: this is an infinite loop if the year is at base year
-            while(target < this->cur_time.tm_year) (*this) = this->operator-(day::value);
+            while(target < this->cur_time.tm_year)
+            {
+                tempb = (this->cur_time.tm_yday == 0);
+                if(tempb)
+                {
+                    tempi = this->cur_time.tm_year;
+                }
+                (*this) = this->operator-(day::value);
+                
+                //make sure that if the year fails to decrement, we don't get stuck in this loop!
+                if(tempb && (this->cur_time.tm_year == tempi)) break;
+            }
         }
         else if(target > this->cur_time.tm_year)
         {
@@ -466,11 +477,8 @@ namespace tdata
         
         if(this->cur_time.tm_yday == 0)
         {
-            if(this->cur_time.tm_year > (-1900))
-            {
-                this->cur_time.tm_year--;
-                this->cur_time.tm_yday = (__isleap(this->cur_time.tm_year) ? 365 : 364);
-            }
+            this->cur_time.tm_year--;
+            this->cur_time.tm_yday = (__isleap(this->cur_time.tm_year) ? 365 : 364);
         }
         else if(this->cur_time.tm_yday > 0) this->cur_time.tm_yday--;
         this->sync_to_yday();
