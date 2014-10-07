@@ -79,7 +79,7 @@ namespace common_menu
 {
     namespace snapshot
     {
-        bool save_snapshot(const ::snapshot::snapshot_data& snap)
+        bool save_snapshot(const ::snapshot::snapshot_data& snap, const std::string& f)
         {
             using std::ofstream;
             using fsys::is_folder;
@@ -87,12 +87,13 @@ namespace common_menu
             using fsys::create_folder;
             using fsys::result_data_boolean;
             using ::snapshot::snapshot_folder;
-            using ::snapshot::snapshot_path;
             using fsys::pref_slash;
             
             ofstream out;
             result_data_boolean tempres;
-            std::string folder(snapshot_folder()), file(snapshot_path(snap.id));
+            std::string folder(snapshot_folder()), file(f + fsys::pref_slash() + 
+                            std::to_string(snap.id) + 
+                            fsyssnap_SNAPSHOT_FILE_EXTENSION);
             bool success(false);
             
             if(snap.id != 0)

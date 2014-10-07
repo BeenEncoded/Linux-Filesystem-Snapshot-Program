@@ -1,9 +1,6 @@
 #include <vector>
 #include <string>
-#include <iostream>
 #include <fstream>
-#include <boost/filesystem.hpp>
-#include <unordered_set>
 
 #include "snapshot_file_loaders.hpp"
 #include "filesystem.hpp"
@@ -18,48 +15,61 @@ using fsys::is_symlink;
 using fsys::tree_riterator_class;
 using std::string;
 using fsys::pref_slash;
-using std::unordered_set;
 using std::vector;
 using snapshot::snapshot_data;
 
 namespace
 {
     string file_extension(const std::string&);
-    unordered_set<unsigned long long> extract_ids(const vector<snapshot_data>&);
+    bool load_id(const std::string&, unsigned long long&);
+    std::string snapshot_path(const unsigned long long&);
+    std::vector<std::string> paths_of_extension(const std::string&, const std::string&);
     
     
     inline std::string file_extension(const std::string& p)
     {
-        string temps;
-        bool dotmet(false);
+        string temps(p);
+        std::string::size_type pos(std::string::npos);
         
-        if(is_file(p).value)
+        if(!temps.empty())
         {
-            for(std::string::const_reverse_iterator it = p.rbegin(); ((it != p.rend()) && !dotmet); it++)
+            pos = temps.rfind('.');
+            if(pos != std::string::npos)
             {
-                temps = ((*it) + temps);
-                if((*it == '.') && !dotmet) dotmet = true;
+                temps.erase(temps.begin(), (temps.begin() + pos));
             }
         }
         return temps;
     }
     
-    inline unordered_set<unsigned long long> extract_ids(const vector<snapshot_data>&  snapshots)
+    /** Loads a snapshot's id from a designated file.  If fails, returns false. */
+    inline bool load_id(const std::string& s, unsigned long long& id)
     {
-        unordered_set<unsigned long long> ids;
-        for(vector<snapshot_data>::const_iterator it = snapshots.begin(); it != snapshots.end(); ++it)
+        id = 0;
+        bool success(false);
+        std::ifstream in;
+        snapshot::snapshot_data tempsnap;
+        
+        if(is_file(s).value && !is_symlink(s).value)
         {
-            ids.insert(it->id);
+            in.open(s, std::ios::binary);
+            snapshot::in_header(in, tempsnap);
+            in.close();
+            id = tempsnap.id;
+            success = (id > 0);
         }
-        return ids;
+        return success;
     }
     
+    /* Returns the path of a snapshot given its id.*/
+    inline std::string snapshot_path(const unsigned long long& id)
+    {
+        return std::string(snapshot::snapshot_folder() + pref_slash() + std::string("snapshot") + 
+                        std::to_string(id) + std::string(fsyssnap_SNAPSHOT_FILE_EXTENSION));
+    }
     
-}
-
-namespace snapshot
-{
-    std::vector<string> paths_of_extension(const string& p, const string& ext)
+    /** Finds a all the paths in a folder that end in a specified extension. */
+    inline std::vector<string> paths_of_extension(const string& p, const string& ext)
     {
         std::vector<string> snapshot_files;
         
@@ -76,18 +86,17 @@ namespace snapshot
         return snapshot_files;
     }
     
+    
+}
+
+namespace snapshot
+{
+    /** Returns the name of the folder that should be used to put snapshots in. */
     std::string snapshot_folder()
     {
         return (current_path().make_preferred().string() + 
                 boost::filesystem::path("/").make_preferred().string() + 
                 fsyssnap_SNAPSHOT_FOLDER_NAME);
-    }
-    
-    /* Returns the path of a snapshot given its id.*/
-    std::string snapshot_path(const unsigned long long& id)
-    {
-        return std::string(snapshot_folder() + pref_slash() + std::string("snapshot") + 
-                        std::to_string(id) + std::string(fsyssnap_SNAPSHOT_FILE_EXTENSION));
     }
     
     /* Loads an entire snapshot.  Returns false if fails. */
@@ -120,44 +129,11 @@ namespace snapshot
         return success;
     }
     
-    /* returns a hash of all the paths in a snapshot by loading the snapshot
-     * and then extracvting the paths from it.  Very in-efficient, but for the
-     * purpose of comparing two snapshots, this is the least memory-intensive. */
-    std::unordered_set<std::string> load_paths_from_snapshot(const snapshot::snapshot_data& snap)
-    {
-        using fsys::is_file;
-        using fsys::is_folder;
-        using fsys::is_symlink;
-        
-        std::unordered_set<std::string> paths;
-        snapshot::snapshot_data tempsnap;
-        std::string folder(snapshot::snapshot_folder()), path(snapshot::snapshot_path(snap.id));
-        
-        if(snap.id > 0)
-        {
-            if(is_folder(folder).value && !is_symlink(folder).value)
-            {
-                if(is_file(path).value && !is_symlink(path).value)
-                {
-                    if(load_snapshot(tempsnap, path))
-                    {
-                        for(std::vector<std::string>::const_iterator it = tempsnap.paths.begin(); 
-                                        it != tempsnap.paths.end(); ++it)
-                        {
-                            if(!paths.insert(*it).second) std::cerr<< "\""<< *it<< "\" \
-paths.insert(*it) > failed to insert"<< std::endl;
-                        }
-                    }
-                }
-            }
-        }
-        return paths;
-    }
-    
+    /** Generates a unique id for a snapshot.  The id should not be in use
+     * by another snapshot, and should not be equal to zero. */
     unsigned long long new_snapshot_id()
     {
-        unordered_set<unsigned long long> ids(extract_ids(
-                list_snapshot_info(snapshot::snapshot_folder())));
+        std::unordered_map<unsigned long long, std::string> ids(list_ids(snapshot_folder()));
         unsigned long long newid(1);
         
         if(!ids.empty())
@@ -167,35 +143,43 @@ paths.insert(*it) > failed to insert"<< std::endl;
         return newid;
     }
     
-    /** Loads all the snapshot information from snapshot files in a specified
-     * folder.  It gets everything but the pathlist to save memory*/
-    std::vector<snapshot::snapshot_data> list_snapshot_info(const std::string& root)
+    /* Lists the ids of all snapshots found within a folder.  The ids are tied 
+     * to the files they were extracted from, so loading the appropriate
+     * file for an id should be trivial. */
+    std::unordered_map<unsigned long long, std::string> list_ids(const std::string& folder)
     {
-        using fsys::is_file;
+        std::unordered_map<unsigned long long, std::string> ids;
+        unsigned long long tempid(0);
+        std::vector<std::string> files;
         
-        std::vector<std::string> files(snapshot::paths_of_extension(root, fsyssnap_SNAPSHOT_FILE_EXTENSION));
-        std::vector<snapshot::snapshot_data> snapshot_list;
-        std::ifstream in;
-        
-        if(files.size() > 0)
+        if(is_folder(folder).value && !is_symlink(folder).value)
         {
-            for(vector<string>::const_iterator it = files.begin(); it != files.end(); ++it)
+            files = paths_of_extension(folder, fsyssnap_SNAPSHOT_FILE_EXTENSION);
+            if(!files.empty())
             {
-                if(is_file(*it).value)
+                for(std::vector<std::string>::const_iterator it = files.begin(); 
+                                it != files.end(); ++it)
                 {
-                    in.open(it->c_str(), std::ios::in);
-                    if(in.good())
-                    {
-                        snapshot_list.push_back(snapshot_data());
-                        in_header(in, snapshot_list.back());
-                    }
-                    in.close();
+                    if(load_id(*it, tempid)) ids[tempid] = *it;
                 }
             }
         }
-        files.clear();
-        files.shrink_to_fit();
-        return snapshot_list;
+        return ids;
+    }
+    
+    bool load_header(snapshot::snapshot_data& snap, const std::string& file)
+    {
+        bool success(false);
+        std::ifstream in;
+        
+        if(is_file(file).value && !is_symlink(file).value)
+        {
+            in.open(file.c_str(), std::ios::binary);
+            snapshot::in_header(in, snap);
+            in.close();
+            success = (snap.id > 0);
+        }
+        return success;
     }
     
     

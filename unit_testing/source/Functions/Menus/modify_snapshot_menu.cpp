@@ -1,47 +1,34 @@
 #include <string>
 #include <vector>
-#include <fstream>
 #include <iostream>
-#include <boost/filesystem.hpp>
-#include <unordered_set>
-#include <ctime>
+#include <unordered_map>
 
-#include "modify_snapshot_menu.hpp"
-#include "snapshot_file_loaders.hpp"
-#include "snapshot_class.hpp"
 #include "common.hpp"
 #include "global_defines.hpp"
-#include "scroll_display.hpp"
-#include "filesystem.hpp"
-#include "date_class.hpp"
+#include "snapshot_class.hpp"
+#include "snapshot_file_loaders.hpp"
 #include "common_menu.hpp"
+#include "time_class.hpp"
 #include "filesystem.hpp"
-
-using common_menu::menu_return_data;
-using snapshot::snapshot_data;
-using std::cout;
-using std::endl;
-using std::cerr;
-using std::vector;
-using std::string;
-using std::unordered_set;
 
 
 namespace
 {
     void display_help();
     bool remove_snapshot(const snapshot::snapshot_data&);
-    std::string display_snap_time(const snapshot::snapshot_data&);
+    std::string display_time(const tdata::time_class&);
     void diff_snapshots(const unsigned long long&, const unsigned long long&);
-    bool more_recent_than(const unsigned long long&, const unsigned long long&);
     bool create_record_folder();
     std::string record_folder();
-    std::string strtime(const struct tm&);
+    std::vector<snapshot::snapshot_data> load_all_headers(const std::string&);
     
     
     
     inline void display_help()
     {
+        using std::cout;
+        using std::endl;
+        
         common::cls();
         for(unsigned int x = 0; x < 3; x++) cout<< endl;
         cout<< " Controls:"<< endl;
@@ -67,58 +54,37 @@ namespace
         using fsys::can_delete;
         using fsys::fdelete;
         using snapshot::snapshot_folder;
-        using snapshot::snapshot_path;
+        
+        std::string file(snapshot::snapshot_folder() + fsys::pref_slash() + 
+                        std::to_string(snap.id) + fsyssnap_SNAPSHOT_FILE_EXTENSION);
         
         if(is_folder(snapshot_folder()).value && !is_symlink(snapshot_folder()).value)
         {
-            if(is_file(snapshot_path(snap.id)).value)
+            if(is_file(file).value)
             {
-                if(can_delete(snapshot_path(snap.id)))
+                if(can_delete(file))
                 {
-                    return fdelete(snapshot_path(snap.id)).value;
+                    return fdelete(file).value;
                 }
             }
         }
         return false;
     }
     
-    inline std::string display_snap_time(const snapshot::snapshot_data& snap)
+    /** Returns a string representation of time */
+    inline std::string display_time(const tdata::time_class& t)
     {
         std::string temps;
         
-        if(snap.hour > 12) temps += std::to_string(snap.hour % 12);
-        else if(snap.hour == 0) temps += "12";
-        else temps += std::to_string(snap.hour);
-        
-        temps += ":";
-        if(snap.minute < 10) temps += '0';
-        temps += std::to_string(snap.minute);
-        temps += ":";
-        if(snap.second < 10) temps += '0';
-        temps += (std::to_string(snap.second) + " ");
-        temps += ((snap.hour > 11) ? "pm" : "am");
+        temps = (t.wday_name() + " " + t.month_name() + " " + 
+                        std::to_string((t.month() + 1)) + ", " + 
+                        std::to_string(t.gyear()) + " at " + 
+                        std::to_string(t.hour()) + ":" + std::to_string(t.minute()) + 
+                        "." + std::to_string(t.second()) + std::string(" ") + 
+                        (t.am() ? "AM" : "PM"));
         return temps;
     }
-    
-    inline bool more_recent_than(const unsigned long long& id1, const unsigned long long& id2)
-    {
-        using snapshot::snapshot_path;
-        
-        auto load_snap = [](const std::string& s)->snapshot::snapshot_data
-        {
-            snapshot::snapshot_data tempsnap;
-            std::ifstream in(s.c_str(), std::ios::binary);
-            if(in.good())
-            {
-                snapshot::in_header(in, tempsnap);
-            }
-            in.close();
-            return tempsnap;
-        };
-        
-        return (load_snap(snapshot_path(id1)) < load_snap(snapshot_path(id2)));
-    }
-    
+
     inline std::string record_folder()
     {
         return std::string(snapshot::snapshot_folder() + fsys::pref_slash() + 
@@ -149,33 +115,33 @@ namespace
         return (is_folder(folder).value && !is_symlink(folder).value);
     }
     
-    /** returns the time in the form of a string.  This is mainly for file-naming. */
-    inline std::string strtime(const struct tm& t)
-    {
-        std::string temps;
-        date::date_val tempdate;
-        unsigned int hour(t.tm_hour);
-        bool am(hour < 12);
-        
-        tempdate = t;
-        temps += date::display(tempdate);
-        temps += " at ";
-        if(am && (hour == 0))
-        {
-            hour = 12;
-        }
-        else if(!am && (hour > 12)) hour %= 12;
-        if(hour < 10) temps += '0';
-        temps += (std::to_string(hour) + ":");
-        if(t.tm_min < 10) temps += '0';
-        temps += (std::to_string(t.tm_min) + std::string(" ") + 
-                        (am ? "am" : "pm"));
-        return temps;
-    }
-    
     inline void diff_snapshots(const unsigned long long& id1 __attribute__((unused)), const unsigned long long& id2 __attribute__((unused)))
     {
         //todo finish this... I want to write a diff object to handle it, though
+    }
+    
+    std::vector<snapshot::snapshot_data> load_all_headers(const std::string& folder)
+    {
+        using fsys::is_folder;
+        using fsys::is_symlink;
+        
+        std::unordered_map<unsigned long long, std::string> ids;
+        std::vector<snapshot::snapshot_data> snaps;
+        
+        if(is_folder(folder).value && !is_symlink(folder).value)
+        {
+            ids = snapshot::list_ids(folder);
+            if(!ids.empty())
+            {
+                for(std::unordered_map<unsigned long long, std::string>::const_iterator it = ids.begin(); 
+                                it != ids.end(); ++it)
+                {
+                    snaps.push_back(snapshot::snapshot_data());
+                    if(!snapshot::load_header(snaps.back(), it->second)) snaps.pop_back();
+                }
+            }
+        }
+        return snaps;
     }
     
     
@@ -184,16 +150,21 @@ namespace
 namespace snapshot_menu
 {
     
-    menu_return_data main_snapshot_menu(vector<snapshot_data>& snapshots)
+    common_menu::menu_return_data main_snapshot_menu(const std::string& folder)
     {
+        using namespace common_menu;
         using scrollDisplay::scroll_display_class;
         using common::display_scroll_window;
         using key_code::key_code_data;
+        using std::cout;
+        using std::endl;
+        using namespace ::snapshot;
         
         menu_return_data result;
-        vector<string> display;
-        scroll_display_class window(display);
-        key_code_data ch;
+        std::vector<snapshot_data> snapshots(load_all_headers(folder));
+        std::vector<std::string> display;
+        scrollDisplay::scroll_display_class window(display);
+        key_code::key_code_data ch;
         bool finished(false);
         
         auto update_display = [&snapshots, &display](void)->void
@@ -201,8 +172,7 @@ namespace snapshot_menu
             display.clear();
             for(unsigned int x = 0; x < snapshots.size(); x++)
             {
-                display.push_back(date::display(snapshots[x].timestamp) + " at " + 
-                                display_snap_time(snapshots[x]) + "   root: \"" + snapshots[x].root + "\"");
+                display.push_back(display_time(snapshots.at(x).timestamp) + "   root: \"" + snapshots[x].root + "\"");
             }
         };
         
@@ -283,11 +253,11 @@ namespace snapshot_menu
                                 {
                                     if(fsys::is_folder(temps).value && !fsys::is_symlink(temps).value)
                                     {
-                                        if(snapshot::take_snapshot(temps) != 0)
+                                        if(take_snapshot(temps) != 0)
                                         {
                                             snapshots.clear();
                                             snapshots.shrink_to_fit();
-                                            snapshots = snapshot::list_snapshot_info(snapshot::snapshot_folder());
+                                            snapshots = load_all_headers(folder);
                                         }
                                     }
                                 }

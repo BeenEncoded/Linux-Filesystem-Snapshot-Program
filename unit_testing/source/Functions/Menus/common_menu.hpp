@@ -27,7 +27,7 @@ namespace common_menu
     
     namespace snapshot
     {
-        bool save_snapshot(const ::snapshot::snapshot_data&);
+        bool save_snapshot(const ::snapshot::snapshot_data&, const std::string&);
         
     }
     
