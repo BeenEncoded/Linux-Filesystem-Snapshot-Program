@@ -82,7 +82,7 @@ SUITE(snapshot_data_tests_test_suite)
     TEST(snapshot_data_stream_operator_test_case)
     {
         bool tempb(false);
-        for(unsigned int x = 0; x < 1000; x++)
+        for(unsigned int x = 0; x < 20; x++)
         {
             tempb = snapshot_stream_good(rand_data::random_snapshot());
             CHECK(tempb);

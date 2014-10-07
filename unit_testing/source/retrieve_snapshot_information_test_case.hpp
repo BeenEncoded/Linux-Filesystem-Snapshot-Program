@@ -25,6 +25,7 @@ namespace test
     bool snapshot_list_eq(const std::vector<snapshot::snapshot_data>&, 
                     const std::vector<snapshot::snapshot_data>&);
     ss_hasht hash_snapshots(const std::vector<snapshot::snapshot_data>&);
+    std::vector<snapshot::snapshot_data> load_all_headers(const std::string&);
     
     
     class fixture_class
@@ -74,7 +75,8 @@ namespace test
         {
             if(snap.id != 0)
             {
-                folder = snapshot::snapshot_path(snap.id);
+                folder = (snapshot::snapshot_folder() + fsys::pref_slash() + 
+                                std::to_string(snap.id) + fsyssnap_SNAPSHOT_FILE_EXTENSION);
                 out.open(folder.c_str(), std::ios::binary);
                 out<< snap;
                 out.close();
@@ -153,6 +155,27 @@ namespace test
         return (!is_folder(s).value && !is_symlink(s).value);
     }
     
+    inline std::vector<snapshot::snapshot_data> load_all_headers(const std::string& folder)
+    {
+        std::unordered_map<unsigned long long, std::string> ids;
+        std::vector<snapshot::snapshot_data> snaps;
+        
+        if(fsys::is_folder(folder).value && !fsys::is_symlink(folder).value)
+        {
+            ids = snapshot::list_ids(folder);
+            for(std::unordered_map<unsigned long long, std::string>::const_iterator it = ids.begin(); 
+                            it != ids.end(); ++it)
+            {
+                snaps.push_back(snapshot::snapshot_data());
+                if(!snapshot::load_header(snaps.back(), it->second))
+                {
+                    snaps.pop_back();
+                }
+            }
+        }
+        return snaps;
+    }
+    
     
 }
 
@@ -163,7 +186,7 @@ TEST_FIXTURE(fixture_class, retrieve_information_test_case)
     using namespace test;
     
     std::vector<snapshot::snapshot_data> tempsnap;
-    tempsnap = snapshot::list_snapshot_info(snapshot::snapshot_folder());
+    tempsnap = load_all_headers(snapshot::snapshot_folder());
     CHECK(snapshot_list_eq(tempsnap, snaps));
 }
 
