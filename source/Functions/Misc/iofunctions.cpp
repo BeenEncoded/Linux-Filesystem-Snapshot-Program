@@ -14,7 +14,6 @@ namespace input
     {
         int ch;
         struct termios temp_term, cur_term;
-        
         tcgetattr(STDIN_FILENO, &cur_term);
         temp_term = cur_term;
         temp_term.c_lflag &= ~(ICANON | ECHO);

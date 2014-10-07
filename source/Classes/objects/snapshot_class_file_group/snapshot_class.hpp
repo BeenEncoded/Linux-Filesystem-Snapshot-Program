@@ -6,7 +6,7 @@
 #include <fstream>
 #include <ctime>
 
-#include "date_class.hpp"
+#include "time_class.hpp"
 
 namespace snapshot
 {
@@ -30,8 +30,7 @@ namespace snapshot
         
         std::string root;
         std::vector<std::string> paths;
-        date::date_val timestamp;
-        unsigned int hour, minute, second;
+        tdata::time_class timestamp;
         unsigned long long id = 0;
     };
     

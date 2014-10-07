@@ -45,7 +45,12 @@ namespace key_code
 {
     class key_code_data;
     
+    extern std::vector<key_code_data> keys;
+    
     std::ostream& operator<<(std::ostream&, const key_code_data&);
+    
+    bool is_listed_control(const key_code_data&);
+    bool might_be_control(const key_code_data&);
     
     //todo eliminate unions from this object
     class key_code_data
@@ -106,17 +111,6 @@ namespace key_code
         typedef const_int_type<22> f11;
         typedef const_int_type<23> f12;
     }
-    
-    std::vector<key_code::key_code_data> construct_keys();
-    
-    /* A vector containing all the key codes.  Can be changed if necessary.
-     I was thinking about adding a "calibration" menu or somthing in case
-     the key codes change.*/
-     //todo make this extern std::vector again...
-    static const std::vector<key_code_data> keys(construct_keys());
-    
-    bool is_control(const key_code_data&);
-    bool might_be_control(const key_code_data&);
     
     
 }
