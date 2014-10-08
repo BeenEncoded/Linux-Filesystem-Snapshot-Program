@@ -7,6 +7,7 @@
 #include "global_defines.hpp"
 #include "common.hpp"
 #include "scroll_display.hpp"
+#include "filesystem.hpp"
 
 namespace
 {
@@ -166,6 +167,18 @@ namespace common
             cout<< endl;
         }
         else cout<< endl<< endl;
+    }
+    
+    std::string parent_folder(const std::string& f)
+    {
+        std::string temps(f);
+        std::string::size_type pos(temps.rfind(fsys::pref_slash()));
+        
+        if(pos != std::string::npos)
+        {
+            temps.erase((temps.begin() + (pos + 1)), temps.end());
+        }
+        return temps;
     }
     
     namespace inp

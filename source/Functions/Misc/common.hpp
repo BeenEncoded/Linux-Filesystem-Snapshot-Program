@@ -90,6 +90,7 @@ namespace common
     void center(const std::string&);
     struct tm get_time();
     void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&);
+    std::string parent_folder(const std::string&);
     
     namespace inp
     {

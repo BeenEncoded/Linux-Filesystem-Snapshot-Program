@@ -63,6 +63,17 @@ namespace
                 if(!pd->canceled) common::cl();
             }
         }
+        if(!pd->canceled)
+        {
+            using std::cout;
+            using std::endl;
+            
+            common::cls();
+            for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
+            common::center("Paths Captured: " + std::to_string(pd->count));
+            common::wait();
+            common::cls();
+        }
     }
     
     void display_current_status(take_snapshot_proc_data& pd)

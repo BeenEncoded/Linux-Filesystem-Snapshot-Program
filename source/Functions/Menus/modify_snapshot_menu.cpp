@@ -16,14 +16,16 @@
 namespace
 {
     void display_help();
-    bool remove_snapshot(const snapshot::snapshot_data&);
+    bool remove_snapshot(const snapshot::snapshot_data&, const std::string&);
     std::string display_time(const tdata::time_class&);
     void diff_snapshots(const std::string&, const std::string&);
-    bool create_record_folder();
-    std::string record_folder();
+    bool create_record_folder(const std::string&);
+    std::string record_folder(const std::string&);
     std::vector<snapshot::snapshot_data> load_all_headers(const std::string&);
     std::vector<std::string> difference_between(const std::unordered_set<std::string>&, 
                     const std::unordered_set<std::string>&);
+    std::string file_of_snapshot(const snapshot::snapshot_data&, const std::string&);
+    std::unordered_set<std::string> load_paths(const std::string&);
     
     
     
@@ -49,7 +51,8 @@ namespace
         common::wait();
     }
     
-    inline bool remove_snapshot(const snapshot::snapshot_data& snap)
+    /** Removes a snapshot's file. */
+    inline bool remove_snapshot(const snapshot::snapshot_data& snap, const std::string& folder)
     {
         using fsys::is_folder;
         using fsys::is_file;
@@ -58,10 +61,9 @@ namespace
         using fsys::fdelete;
         using snapshot::snapshot_folder;
         
-        std::string file(snapshot::snapshot_folder() + fsys::pref_slash() + 
-                        std::to_string(snap.id) + fsyssnap_SNAPSHOT_FILE_EXTENSION);
+        std::string file(file_of_snapshot(snap, folder));
         
-        if(is_folder(snapshot_folder()).value && !is_symlink(snapshot_folder()).value)
+        if(is_folder(folder).value && !is_symlink(folder).value)
         {
             if(is_file(file).value)
             {
@@ -88,20 +90,22 @@ namespace
         return temps;
     }
 
-    inline std::string record_folder()
+    /** Returns the full path of the record folder given the snapshot
+     * folder being used. */
+    inline std::string record_folder(const std::string& folder)
     {
-        return std::string(snapshot::snapshot_folder() + fsys::pref_slash() + 
+        return std::string(folder + fsys::pref_slash() + 
                         std::string("records"));
     }
     
-    inline bool create_record_folder()
+    inline bool create_record_folder(const std::string& f)
     {
         using fsys::is_folder;
         using fsys::is_file;
         using fsys::is_symlink;
         using snapshot::snapshot_folder;
         
-        std::string folder(record_folder());
+        std::string folder(record_folder(f));
         
         if(!is_folder(folder).value && !is_file(folder).value && !is_symlink(folder).value)
         {
@@ -130,9 +134,82 @@ namespace
         return diff;
     }
     
+    inline std::unordered_set<std::string> load_paths(const std::string& file)
+    {
+        using fsys::is_file;
+        using fsys::is_symlink;
+        
+        std::unordered_set<std::string> paths;
+        std::string temps;
+        std::ifstream in;
+        
+        if(is_file(file).value && !is_symlink(file).value)
+        {
+            in.open(file.c_str(), std::ios::binary);
+            //limit the scope while we skip the header:
+            {
+                snapshot::snapshot_data tempsnap;
+                snapshot::in_header(in, tempsnap);
+            }
+            in.peek();
+            while(in.good() && (in.peek() != struct_delim::value) && (in.peek() != EOF))
+            {
+                if(common::safe_getline(in, temps, mem_delim::value))
+                {
+                    paths.insert(temps);
+                }
+            }
+            in.close();
+        }
+        return paths;
+    }
+    
     inline void diff_snapshots(const std::string& file_bef, const std::string& file_aft)
     {
-        //cur_pos finish diff algo and seection in menus
+        using snapshot::load_header;
+        using snapshot::snapshot_data;
+        
+        std::string file, newbef(file_bef), newaft(file_aft);
+        std::unordered_set<std::string> paths_before, paths_after;
+        std::ofstream out;
+        
+        auto save_diff_result = [](const std::vector<std::string>& paths, 
+                        std::ofstream& out, const std::string& title)->void
+        {
+            using std::endl;
+            
+            out<< title<< endl<< endl;
+            for(std::vector<std::string>::const_iterator it = paths.begin(); it != paths.end(); ++it)
+            {
+                out<< *it<< endl;
+            }
+        };
+        
+        if(create_record_folder(common::parent_folder(file_bef)))
+        {
+            snapshot_data before, after;
+            
+            if(load_header(before, file_bef) && load_header(after, file_aft))
+            {
+                if(before.timestamp > after.timestamp)
+                {
+                    std::swap(before, after);
+                    std::swap(newbef, newaft);
+                }
+                paths_before = load_paths(newbef);
+                paths_after = load_paths(newaft);
+                
+                //cur_pos open a new record folder
+                save_diff_result(difference_between(paths_after, paths_before), 
+                                out, (std::string(5, '\n') + "DELETED PATHS: "));
+                                
+                save_diff_result(difference_between(paths_before, paths_after), 
+                                out, (std::string(5, '\n') + "CREATED PATHS: "));
+                                
+                paths_before.erase(paths_before.begin(), paths_before.end());
+                paths_after.erase(paths_after.begin(), paths_after.end());
+            }
+        }
     }
     
     std::vector<snapshot::snapshot_data> load_all_headers(const std::string& folder)
@@ -157,6 +234,27 @@ namespace
             }
         }
         return snaps;
+    }
+    
+    /** Returns the path of a snapshot if it has been saved.  Otherwise it
+     * will return nothing. */
+    std::string file_of_snapshot(const snapshot::snapshot_data& snap, const std::string& folder)
+    {
+        std::string temps;
+        std::unordered_map<unsigned long long, std::string> ids;
+        
+        if(snap.id != 0)
+        {
+            ids = snapshot::list_ids(folder);
+            if(!ids.empty())
+            {
+                if(ids.find(snap.id) != ids.end())
+                {
+                    temps = ids[snap.id];
+                }
+            }
+        }
+        return temps;
     }
     
     
@@ -202,11 +300,13 @@ namespace snapshot_menu
             cout<< endl;
             
             for(unsigned int x = 0; x < 2; x++) cout<< endl;
-            common_menu::display_scroll_window(window, display.size());
+            common_menu::display_scroll_window(window, display.size(), selection);
             
             for(unsigned int x = 0; x < 3; x++) cout<< endl;
             cout<< " [SPC] -  Select"<< endl;
             cout<< " n -  NEW snapshot"<< endl;
+            cout<< " c -  Compare snaps"<< endl;
+            cout<< " \\ -  clear selection"<< endl;
             cout<< " e -  Exit"<< endl;
             
             ch = common::gkey_funct();
@@ -230,7 +330,7 @@ namespace snapshot_menu
                         {
                             if(!snapshots.empty())
                             {
-                                if(remove_snapshot(snapshots.at(window.gpos().whole))) 
+                                if(remove_snapshot(snapshots.at(window.gpos().whole), folder)) 
                                 {
                                     snapshots.erase(snapshots.begin() + window.gpos().whole);
                                 }
@@ -274,20 +374,27 @@ namespace snapshot_menu
                                             snapshots.clear();
                                             snapshots.shrink_to_fit();
                                             snapshots = load_all_headers(folder);
+                                            update_display();
                                         }
                                     }
                                 }
-                                update_display();
                             }
                         }
                         break;
                         
-                        case '\n':
+                        case 'c':
                         {
-                            if(selection.count() == 2)
+                            if(selection.gselection().size() > 1)
                             {
-                                //todo diff selected snapshots
+                                diff_snapshots(file_of_snapshot(snapshots[selection[0]], folder), 
+                                                file_of_snapshot(snapshots[selection[1]], folder));
                             }
+                        }
+                        break;
+                        
+                        case '\\':
+                        {
+                            selection.clear();
                         }
                         break;
                         
@@ -295,10 +402,8 @@ namespace snapshot_menu
                         {
                             if(!snapshots.empty())
                             {
-                                if((selection.count() < 2) && (!selection.is_selected(window.gpos().whole)))
-                                {
-                                    selection.add(window.gpos().whole);
-                                }
+                                if(!selection.is_selected(window.gpos().whole) && (selection.gselection().size() < 2)) selection.add(window.gpos().whole);
+                                else if(selection.is_selected(window.gpos().whole)) selection.remove(window.gpos().whole);
                             }
                         }
                         break;
