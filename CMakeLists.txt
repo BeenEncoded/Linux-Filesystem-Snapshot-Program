@@ -123,7 +123,7 @@ endmacro(link_mthread)
 #adds optimization flags
 macro(add_build_optimizations)
     if(BUILD_RELEASE)
-        add_definitions(-O -O2)
+        add_definitions(-O -O3)
     endif()
 endmacro(add_build_optimizations)
 

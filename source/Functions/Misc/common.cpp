@@ -176,9 +176,19 @@ namespace common
         
         if(pos != std::string::npos)
         {
-            temps.erase((temps.begin() + (pos + 1)), temps.end());
+            temps.erase((temps.begin() + pos), temps.end());
         }
         return temps;
+    }
+    
+    bool string_begins_with(const std::string& s, const std::string& beg)
+    {
+        return (s.find(beg) == 0);
+    }
+    
+    bool string_ends_with(const std::string& s, const std::string& end)
+    {
+        return (s.rfind(end) == (s.size() - end.size()));
     }
     
     namespace inp

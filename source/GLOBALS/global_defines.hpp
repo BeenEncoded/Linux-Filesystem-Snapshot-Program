@@ -3,11 +3,16 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 #define LETTERS "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
 #define NUMBERS "1234567890"
 #define SPECIALS "`~!@#$%^&*()-_=+[{]}\\|;:\'\",<.>/? "
 #define GSTRING_CANCEL "oiwydfp980  q30f8p90c9-i130894f=i-=23f=-    0w2g]["
+
+#define ethrow(MSG) throw std::runtime_error(std::string(std::string(__FILE__) + \
+"    Exception thrown at line " + std::to_string(__LINE__) + \
+": " + std::string(MSG)))
 
 /** FILESYSTEM reading constants: */
 

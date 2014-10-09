@@ -3,6 +3,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
+#include <stdexcept>
 
 #include "common.hpp"
 #include "global_defines.hpp"
@@ -82,7 +83,7 @@ namespace
         std::string temps;
         
         temps = (t.wday_name() + " " + t.month_name() + " " + 
-                        std::to_string((t.month() + 1)) + ", " + 
+                        std::to_string(t.mday()) + ", " + 
                         std::to_string(t.gyear()) + " at " + 
                         std::to_string(t.hour()) + ":" + std::to_string(t.minute()) + 
                         "." + std::to_string(t.second()) + std::string(" ") + 
@@ -123,7 +124,7 @@ namespace
     }
     
     /** Returns a vector of strings containing the elements found in bef, but not in aft. */
-    std::vector<std::string> difference_between(const std::unordered_set<std::string>& bef, 
+    inline std::vector<std::string> difference_between(const std::unordered_set<std::string>& bef, 
                     const std::unordered_set<std::string>& aft)
     {
         std::vector<std::string> diff;
@@ -166,11 +167,22 @@ namespace
     
     inline void diff_snapshots(const std::string& file_bef, const std::string& file_aft)
     {
+        using std::cout;
+        using std::endl;
+        using fsys::is_file;
+        using fsys::is_symlink;
         using snapshot::load_header;
         using snapshot::snapshot_data;
         
+        common::cls();
+        for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
+        common::center("Comparing, please wait...");
+        cout.flush();
+        
         std::string file, newbef(file_bef), newaft(file_aft);
         std::unordered_set<std::string> paths_before, paths_after;
+        tdata::time_class now;
+        std::string temps;
         std::ofstream out;
         
         auto save_diff_result = [](const std::vector<std::string>& paths, 
@@ -191,7 +203,7 @@ namespace
             
             if(load_header(before, file_bef) && load_header(after, file_aft))
             {
-                if(before.timestamp > after.timestamp)
+                if(after.timestamp < before.timestamp)
                 {
                     std::swap(before, after);
                     std::swap(newbef, newaft);
@@ -199,20 +211,46 @@ namespace
                 paths_before = load_paths(newbef);
                 paths_after = load_paths(newaft);
                 
-                //cur_pos open a new record folder
-                save_diff_result(difference_between(paths_after, paths_before), 
+                now = tdata::current_time();
+                temps = (record_folder(common::parent_folder(file_bef)) + fsys::pref_slash() + 
+                                now.month_name() + " " + std::to_string(now.mday()) + 
+                                ", " + std::to_string(now.gyear()) + "  at " + 
+                                std::to_string(now.hour()) + " " + 
+                                std::to_string(now.minute()) + " " + 
+                                std::to_string(now.second()) + ".txt");
+                
+                out.open(temps.c_str(), std::ios::out);
+                
+                if(!out.good()) ethrow(("Out is not good! (file: \"" + temps + "\")"));
+                
+                out<< "Time frame:  "<< display_time(before.timestamp)<< " - "<< 
+                                display_time(after.timestamp)<< endl;
+                
+                save_diff_result(difference_between(paths_before, paths_after), 
                                 out, (std::string(5, '\n') + "DELETED PATHS: "));
                                 
-                save_diff_result(difference_between(paths_before, paths_after), 
+                save_diff_result(difference_between(paths_after, paths_before), 
                                 out, (std::string(5, '\n') + "CREATED PATHS: "));
                                 
                 paths_before.erase(paths_before.begin(), paths_before.end());
                 paths_after.erase(paths_after.begin(), paths_after.end());
+                if(out.is_open()) out.close();
             }
+        }
+        
+        if(is_file(temps).value && !is_symlink(temps).value)
+        {
+            common::cls();
+            for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
+            common::center("DONE!");
+            cout<< endl;
+            cout<< endl;
+            common::center("Records saved in: \"" + temps + "\"");
+            common::wait();
         }
     }
     
-    std::vector<snapshot::snapshot_data> load_all_headers(const std::string& folder)
+    inline std::vector<snapshot::snapshot_data> load_all_headers(const std::string& folder)
     {
         using fsys::is_folder;
         using fsys::is_symlink;
@@ -238,7 +276,7 @@ namespace
     
     /** Returns the path of a snapshot if it has been saved.  Otherwise it
      * will return nothing. */
-    std::string file_of_snapshot(const snapshot::snapshot_data& snap, const std::string& folder)
+    inline std::string file_of_snapshot(const snapshot::snapshot_data& snap, const std::string& folder)
     {
         std::string temps;
         std::unordered_map<unsigned long long, std::string> ids;
@@ -333,6 +371,7 @@ namespace snapshot_menu
                                 if(remove_snapshot(snapshots.at(window.gpos().whole), folder)) 
                                 {
                                     snapshots.erase(snapshots.begin() + window.gpos().whole);
+                                    selection.clear();
                                 }
                             }
                             update_display();
@@ -378,6 +417,7 @@ namespace snapshot_menu
                                         }
                                     }
                                 }
+                                selection.clear();
                             }
                         }
                         break;
@@ -388,6 +428,7 @@ namespace snapshot_menu
                             {
                                 diff_snapshots(file_of_snapshot(snapshots[selection[0]], folder), 
                                                 file_of_snapshot(snapshots[selection[1]], folder));
+                                selection.clear();
                             }
                         }
                         break;
