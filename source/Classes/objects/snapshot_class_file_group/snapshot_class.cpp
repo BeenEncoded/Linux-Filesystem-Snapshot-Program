@@ -4,6 +4,7 @@
 #include <thread>
 #include <ctime>
 #include <fstream>
+#include <cstring>
 
 #include "snapshot_class.hpp"
 #include "common.hpp"
@@ -11,9 +12,16 @@
 #include "global_defines.hpp"
 #include "snapshot_file_loaders.hpp"
 #include "filesystem.hpp"
+#include "time_class.hpp"
 
 namespace
 {
+    struct take_snapshot_proc_data;
+    
+    void construct_tsproc_data(take_snapshot_proc_data&, const std::string&);
+    void collect_snapshot(take_snapshot_proc_data*);
+    void show_process_output(take_snapshot_proc_data*);
+    void display_current_status(take_snapshot_proc_data&);
     
     /* Unifies and limits the scope of the data that is used between
      * the functions of collect_snapshot and show_process_output. */
@@ -24,12 +32,6 @@ namespace
         unsigned long long sid, count;
         std::ofstream out;
     };
-    
-    void construct_tsproc_data(take_snapshot_proc_data&, const std::string&);
-    void collect_snapshot(take_snapshot_proc_data*);
-    void show_process_output(take_snapshot_proc_data*);
-    void display_current_status(take_snapshot_proc_data&);
-    
     
     void collect_snapshot(take_snapshot_proc_data *pd)
     {
@@ -61,6 +63,17 @@ namespace
                 if(!pd->canceled) common::cl();
             }
         }
+        if(!pd->canceled)
+        {
+            using std::cout;
+            using std::endl;
+            
+            common::cls();
+            for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
+            common::center("Paths Captured: " + std::to_string(pd->count));
+            common::wait();
+            common::cls();
+        }
     }
     
     void display_current_status(take_snapshot_proc_data& pd)
@@ -76,6 +89,9 @@ namespace
         cout<< "Currently processing: \""<< pd.current_path<< "\""<< endl;
     }
     
+    /** Initializes all the data for the snapshot collection.  It opens a file
+     * and saves the header to a "new" snapshot, and it should be used before 
+     * executing a new snapshot. */
     void construct_tsproc_data(take_snapshot_proc_data& pd, const std::string& rt)
     {
         snapshot::snapshot_data head;
@@ -86,14 +102,15 @@ namespace
         }
         pd.root = rt;
         pd.sid = snapshot::new_snapshot_id();
-        pd.save_file = snapshot::snapshot_path(pd.sid);
+        pd.save_file = (snapshot::snapshot_folder() + fsys::pref_slash() + 
+                        std::to_string(pd.sid) + fsyssnap_SNAPSHOT_FILE_EXTENSION);
         pd.canceled = false;
         pd.finished = false;
         pd.paused = false;
         pd.count = 0;
         pd.current_path = "";
         
-        head.take_time();
+        head.timestamp = tdata::current_time();
         head.root = pd.root;
         head.id = pd.sid;
         pd.out.open(pd.save_file.c_str(), std::ios::binary);
@@ -156,15 +173,13 @@ namespace snapshot
     {
         if(this != &snap)
         {
-            this->root = snap.root;
-            
-            this->paths = snap.paths;
-            this->paths.shrink_to_fit();
-            
             this->timestamp = snap.timestamp;
+            this->root = snap.root;
             this->id = snap.id;
-            this->hour = snap.hour;
-            this->minute = snap.minute;
+            
+            this->paths.clear();
+            this->paths.shrink_to_fit();
+            this->paths = snap.paths;
         }
         return *this;
     }
@@ -172,13 +187,10 @@ namespace snapshot
     bool snapshot_data::operator==(const snapshot_data& snap) const
     {
         return (
-                (this->paths == snap.paths) && 
                 (this->id == snap.id) && 
-                (this->root == snap.root) && 
                 (this->timestamp == snap.timestamp) && 
-                (this->hour == snap.hour) && 
-                (this->minute == snap.minute) &&
-                (this->second == snap.second));
+                (this->root == snap.root) && 
+                (this->paths == snap.paths));
     }
     
     bool snapshot_data::operator!=(const snapshot_data& snap) const
@@ -186,41 +198,10 @@ namespace snapshot
         return !(this->operator==(snap));
     }
     
+    /** Compares two snapshot's times.  provided for sorting algorithms. */
     bool snapshot_data::operator<(const snapshot_data& s) const
     {
-        bool lessthan(false);
-        if(this->timestamp < s.timestamp)
-        {
-            lessthan = true;
-        }
-        else if(this->timestamp == s.timestamp)
-        {
-            if(this->hour < s.hour)
-            {
-                lessthan = true;
-            }
-            else if(this->hour == s.hour)
-            {
-                if(this->minute < s.minute)
-                {
-                    lessthan = true;
-                }
-                else if(this->minute == s.minute)
-                {
-                    if(this->second < s.second) lessthan = true;
-                }
-            }
-        }
-        return lessthan;
-    }
-    
-    void snapshot_data::take_time()
-    {
-        struct tm t(common::get_time());
-        this->timestamp = t;
-        this->hour = t.tm_hour;
-        this->minute = t.tm_min;
-        this->second = t.tm_sec;
+        return (this->timestamp < s.timestamp);
     }
     
     
@@ -260,15 +241,16 @@ namespace snapshot
     
     std::ostream& out_header(std::ostream& out, const snapshot_data& snap)
     {
+        char *ch(new char[sizeof(unsigned long long)]);
+        
         if(out.good())
         {
             out<< snap.timestamp;
-            out<< snap.hour<< mem_delim::value;
-            out<< snap.minute<< mem_delim::value;
-            out<< snap.second<< mem_delim::value;
-            out<< snap.id<< mem_delim::value;
+            memcpy(ch, &snap.id, sizeof(unsigned long long));
+            for(unsigned int x = 0; x < sizeof(unsigned long long); x++) out<< ch[x];
             out<< snap.root<< mem_delim::value;
         }
+        delete[] ch;
         return out;
     }
     
@@ -276,23 +258,18 @@ namespace snapshot
     {
         using common::safe_getline;
         
+        char *ch(new char[sizeof(unsigned long long)]);
+        
         in.peek();
         if(in.good())
         {
             in>> snap.timestamp;
-            if(safe_getline(in, snap.hour, mem_delim::value))
+            for(unsigned int x = 0; ((x < sizeof(unsigned long long)) && in.good()); x++)
             {
-                if(safe_getline(in, snap.minute, mem_delim::value))
-                {
-                    if(safe_getline(in, snap.second, mem_delim::value))
-                    {
-                        if(safe_getline(in, snap.id, mem_delim::value))
-                        {
-                            safe_getline(in, snap.root, mem_delim::value);
-                        }
-                    }
-                }
+                if(in.peek() != EOF) ch[x] = in.get();
             }
+            memcpy(&snap.id, ch, sizeof(unsigned long long));
+            safe_getline(in, snap.root, mem_delim::value);
         }
         in.peek();
         return in;

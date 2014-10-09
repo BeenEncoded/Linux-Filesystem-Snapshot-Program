@@ -3,11 +3,16 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 #define LETTERS "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
 #define NUMBERS "1234567890"
 #define SPECIALS "`~!@#$%^&*()-_=+[{]}\\|;:\'\",<.>/? "
 #define GSTRING_CANCEL "oiwydfp980  q30f8p90c9-i130894f=i-=23f=-    0w2g]["
+
+#define ethrow(MSG) throw std::runtime_error(std::string(std::string(__FILE__) + \
+"    Exception thrown at line " + std::to_string(__LINE__) + \
+": " + std::string(MSG)))
 
 /** FILESYSTEM reading constants: */
 
@@ -45,7 +50,12 @@ namespace key_code
 {
     class key_code_data;
     
+    extern std::vector<key_code_data> keys;
+    
     std::ostream& operator<<(std::ostream&, const key_code_data&);
+    
+    bool is_listed_control(const key_code_data&);
+    bool might_be_control(const key_code_data&);
     
     //todo eliminate unions from this object
     class key_code_data
@@ -106,16 +116,6 @@ namespace key_code
         typedef const_int_type<22> f11;
         typedef const_int_type<23> f12;
     }
-    
-    std::vector<key_code::key_code_data> construct_keys();
-    
-    /* A vector containing all the key codes.  Can be changed if necessary.
-     I was thinking about adding a "calibration" menu or somthing in case
-     the key codes change.*/
-    static const std::vector<key_code_data> keys(construct_keys());
-    
-    bool is_control(const key_code_data&);
-    bool might_be_control(const key_code_data&);
     
     
 }

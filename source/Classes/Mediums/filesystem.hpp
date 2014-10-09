@@ -29,6 +29,21 @@ namespace fsys
     class delete_iterator_class;
     
     
+    result_data_boolean fdelete(const std::string&);
+    result_data_boolean fcopy(const std::string&, const std::string&);
+    result_data_boolean create_folder(const std::string&);
+    result_data_boolean frename(const std::string&, const std::string&);
+    result_data_boolean fmove(const std::string&, const std::string&);
+    bool can_delete(const std::string&);
+    char pref_slash();
+    
+    std::string current_path();
+    result_data_boolean is_file(const std::string&);
+    result_data_boolean is_folder(const std::string&);
+    result_data_boolean is_symlink(const std::string&);
+    result_data_boolean copy_folders(const std::string&, const std::string&, const std::string&);
+    
+    
     struct result_data_boolean
     {
         
@@ -160,14 +175,6 @@ namespace fsys
         
     };
     
-    result_data_boolean fdelete(const std::string&);
-    result_data_boolean fcopy(const std::string&, const std::string&);
-    result_data_boolean create_folder(const std::string&);
-    result_data_boolean frename(const std::string&, const std::string&);
-    result_data_boolean fmove(const std::string&, const std::string&);
-    bool can_delete(const std::string&);
-    char pref_slash();
-    
     /* Returns a string that represents a group of characters that should
      never appear in a filename on Windows. */
     inline std::string windows_bad_filename_chars()
@@ -182,11 +189,7 @@ namespace fsys
         return std::string("\0\n/");
     }
     
-    std::string current_path();
-    result_data_boolean is_file(const std::string&);
-    result_data_boolean is_folder(const std::string&);
-    result_data_boolean is_symlink(const std::string&);
-    result_data_boolean copy_folders(const std::string&, const std::string&, const std::string&);
+    
 }
 
 #endif

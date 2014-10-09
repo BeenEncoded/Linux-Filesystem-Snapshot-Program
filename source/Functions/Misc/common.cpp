@@ -7,6 +7,7 @@
 #include "global_defines.hpp"
 #include "common.hpp"
 #include "scroll_display.hpp"
+#include "filesystem.hpp"
 
 namespace
 {
@@ -66,10 +67,10 @@ namespace common
         {
             key.control().push_back((int)input::getch().ch());
         }while(key_code::might_be_control(key) && input::kbhit() && 
-                !key_code::is_control(key));
+                !key_code::is_listed_control(key));
         
         if(!key_code::might_be_control(key) && (key.control().size() > 0) && 
-                !key_code::is_control(key))
+                !key_code::is_listed_control(key))
         {
             ch = key.control()[0];
             key.ch() = ch;
@@ -168,6 +169,28 @@ namespace common
         else cout<< endl<< endl;
     }
     
+    std::string parent_folder(const std::string& f)
+    {
+        std::string temps(f);
+        std::string::size_type pos(temps.rfind(fsys::pref_slash()));
+        
+        if(pos != std::string::npos)
+        {
+            temps.erase((temps.begin() + pos), temps.end());
+        }
+        return temps;
+    }
+    
+    bool string_begins_with(const std::string& s, const std::string& beg)
+    {
+        return (s.find(beg) == 0);
+    }
+    
+    bool string_ends_with(const std::string& s, const std::string& end)
+    {
+        return (s.rfind(end) == (s.size() - end.size()));
+    }
+    
     namespace inp
     {
         
@@ -240,7 +263,7 @@ namespace common
                 }
                 
                 key = getch_funct();
-                if(is_control(key))
+                if(is_listed_control(key))
                 {
                     if(key == keys[code::backspace::value])
                     {
