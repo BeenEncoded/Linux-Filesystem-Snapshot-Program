@@ -40,14 +40,16 @@ namespace
         cout<< " Controls:"<< endl;
         cout<< endl;
         cout<< " [DELETE]      -  Deletes selected snapshot"<< endl;
-        cout<< " [ENTER]       -  Set selected snapshot"<< endl;
         cout<< " [up arrow]    -  scroll up in list"<< endl;
         cout<< " [down arrow]  -  scroll down in list"<< endl;
         cout<< " [page up]     -  scroll one page up"<< endl;
         cout<< " [page down]   -  scroll one page down"<< endl;
         cout<< " [HOME]        -  jump to begin"<< endl;
         cout<< " [END]         -  jump to end"<< endl;
+        cout<< " \' \'         -  Select a snapshot"<< endl;
+        cout<< " \'c\'         -  Compare selected snapshots"<< endl;
         cout<< " \'n\'         -  New Snapshot"<< endl;
+        cout<< " \'\\\'        -  Unselect all"<< endl;
         cout<< " \'e\'         -  Exit"<< endl;
         common::wait();
     }
