@@ -333,6 +333,7 @@ namespace snapshot_menu
         do
         {
             common::cls();
+            cout<< "(F5:  HELP)";
             cout<< endl;
             common::center("Snapshot Menu:");
             cout<< endl;
@@ -340,12 +341,13 @@ namespace snapshot_menu
             for(unsigned int x = 0; x < 2; x++) cout<< endl;
             common_menu::display_scroll_window(window, display.size(), selection);
             
-            for(unsigned int x = 0; x < 3; x++) cout<< endl;
+            for(unsigned int x = 0; x < 1; x++) cout<< endl;
             cout<< " [SPC] -  Select"<< endl;
             cout<< " n -  NEW snapshot"<< endl;
             cout<< " c -  Compare snaps"<< endl;
             cout<< " \\ -  clear selection"<< endl;
-            cout<< " e -  Exit"<< endl;
+            cout<< " e -  Exit";
+            cout.flush();
             
             ch = common::gkey_funct();
             
@@ -368,10 +370,26 @@ namespace snapshot_menu
                         {
                             if(!snapshots.empty())
                             {
-                                if(remove_snapshot(snapshots.at(window.gpos().whole), folder)) 
+                                if(common::inp::is_sure("Do you really want to \
+delete the snapshot taken on " + display_time(snapshots.at(window.gpos().whole).timestamp) + "?"))
                                 {
-                                    snapshots.erase(snapshots.begin() + window.gpos().whole);
-                                    selection.clear();
+                                    //some user feedback for those with slow computers:
+                                    common::cls();
+                                    for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
+                                    common::center("Please wait while I delete the snapshot...");
+                                    cout.flush();
+                                    
+                                    //only erase the snapshot from the list if we successfully delete the associated file:
+                                    if(remove_snapshot(snapshots.at(window.gpos().whole), folder)) 
+                                    {
+                                        snapshots.erase(snapshots.begin() + window.gpos().whole);
+                                        selection.clear();
+                                    }
+                                    
+                                    common::cls();
+                                    for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
+                                    common::center("DONE!");
+                                    cout.flush();
                                 }
                             }
                             update_display();
