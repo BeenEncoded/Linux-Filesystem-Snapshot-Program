@@ -230,7 +230,7 @@ namespace tdata
     
     bool time_class::operator>(const time_class& t) const
     {
-        return (this->operator!=(t) && !(this->operator<(t)));
+        return !this->operator<=(t);
     }
     
     bool time_class::operator>=(const time_class& t) const

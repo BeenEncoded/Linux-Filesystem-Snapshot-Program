@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <stdexcept>
+#include <algorithm>
 
 #include "common.hpp"
 #include "global_defines.hpp"
@@ -16,19 +17,29 @@
 
 namespace
 {
+    struct menu_data;
+    
     void display_help();
-    bool remove_snapshot(const snapshot::snapshot_data&, const std::string&);
+    bool remove_snapshot(const menu_data&, const unsigned long long&);
     std::string display_time(const tdata::time_class&);
-    void diff_snapshots(const std::string&, const std::string&);
+    void diff_snapshots(const menu_data&, const snapshot::snapshot_data&, const snapshot::snapshot_data&);
     bool create_record_folder(const std::string&);
     std::string record_folder(const std::string&);
-    std::vector<snapshot::snapshot_data> load_all_headers(const std::string&);
+    void load_all_headers(menu_data&);
     std::vector<std::string> difference_between(const std::unordered_set<std::string>&, 
                     const std::unordered_set<std::string>&);
-    std::string file_of_snapshot(const snapshot::snapshot_data&, const std::string&);
     std::unordered_set<std::string> load_paths(const std::string&);
+    bool compare_snapshots(const snapshot::snapshot_data&, const snapshot::snapshot_data&);
     
     
+    /** Data that this menu, and most functions is calls, needs 
+     * for a lot of operations.*/
+    struct menu_data
+    {
+        std::unordered_map<unsigned long long, std::string> ids;
+        std::vector<snapshot::snapshot_data> snapshots;
+        std::string folder;
+    };
     
     inline void display_help()
     {
@@ -55,24 +66,22 @@ namespace
     }
     
     /** Removes a snapshot's file. */
-    inline bool remove_snapshot(const snapshot::snapshot_data& snap, const std::string& folder)
+    inline bool remove_snapshot(const menu_data& data, const unsigned long long& id)
     {
-        using fsys::is_folder;
         using fsys::is_file;
+        using fsys::is_folder;
         using fsys::is_symlink;
         using fsys::can_delete;
         using fsys::fdelete;
-        using snapshot::snapshot_folder;
         
-        std::string file(file_of_snapshot(snap, folder));
-        
-        if(is_folder(folder).value && !is_symlink(folder).value)
+        if(is_folder(data.folder).value && !is_symlink(data.folder).value && 
+                        (data.ids.find(id) != data.ids.end()))
         {
-            if(is_file(file).value)
+            if(is_file(data.ids.find(id)->second).value)
             {
-                if(can_delete(file))
+                if(can_delete(data.ids.find(id)->second))
                 {
-                    return fdelete(file).value;
+                    return fdelete(data.ids.find(id)->second).value;
                 }
             }
         }
@@ -167,7 +176,8 @@ namespace
         return paths;
     }
     
-    inline void diff_snapshots(const std::string& file_bef, const std::string& file_aft)
+    inline void diff_snapshots(const menu_data& data, const snapshot::snapshot_data& snap1, 
+                    const snapshot::snapshot_data& snap2)
     {
         using std::cout;
         using std::endl;
@@ -181,10 +191,10 @@ namespace
         common::center("Comparing, please wait...");
         cout.flush();
         
-        std::string file, newbef(file_bef), newaft(file_aft);
         std::unordered_set<std::string> paths_before, paths_after;
         tdata::time_class now;
         std::string temps;
+        snapshot::snapshot_data before(snap1), after(snap2);
         std::ofstream out;
         
         auto save_diff_result = [](const std::vector<std::string>& paths, 
@@ -199,45 +209,39 @@ namespace
             }
         };
         
-        if(create_record_folder(common::parent_folder(file_bef)))
+        if((data.ids.find(before.id) != data.ids.end()) && (data.ids.find(after.id) != data.ids.end()))
         {
-            snapshot_data before, after;
-            
-            if(load_header(before, file_bef) && load_header(after, file_aft))
+            if(after.timestamp < before.timestamp)
             {
-                if(after.timestamp < before.timestamp)
-                {
-                    std::swap(before, after);
-                    std::swap(newbef, newaft);
-                }
-                paths_before = load_paths(newbef);
-                paths_after = load_paths(newaft);
-                
-                now = tdata::current_time();
-                temps = (record_folder(common::parent_folder(file_bef)) + fsys::pref_slash() + 
-                                now.month_name() + " " + std::to_string(now.mday()) + 
-                                ", " + std::to_string(now.gyear()) + "  at " + 
-                                std::to_string(now.hour()) + " " + 
-                                std::to_string(now.minute()) + " " + 
-                                std::to_string(now.second()) + ".txt");
-                
-                out.open(temps.c_str(), std::ios::out);
-                
-                if(!out.good()) ethrow(("Out is not good! (file: \"" + temps + "\")"));
-                
-                out<< "Time frame:  "<< display_time(before.timestamp)<< " - "<< 
-                                display_time(after.timestamp)<< endl;
-                
-                save_diff_result(difference_between(paths_before, paths_after), 
-                                out, (std::string(5, '\n') + "DELETED PATHS: "));
-                                
-                save_diff_result(difference_between(paths_after, paths_before), 
-                                out, (std::string(5, '\n') + "CREATED PATHS: "));
-                                
-                paths_before.erase(paths_before.begin(), paths_before.end());
-                paths_after.erase(paths_after.begin(), paths_after.end());
-                if(out.is_open()) out.close();
+                std::swap(before, after);
             }
+            paths_before = load_paths(data.ids.find(before.id)->second);
+            paths_after = load_paths(data.ids.find(after.id)->second);
+            
+            now = tdata::current_time();
+            temps = (record_folder(data.folder) + fsys::pref_slash() + 
+                            now.month_name() + " " + std::to_string(now.mday()) + 
+                            ", " + std::to_string(now.gyear()) + "  at " + 
+                            std::to_string(now.hour()) + " " + 
+                            std::to_string(now.minute()) + " " + 
+                            std::to_string(now.second()) + ".txt");
+            
+            out.open(temps.c_str(), std::ios::out);
+            
+            if(!out.good()) ethrow(("Out is not good! (file: \"" + temps + "\")"));
+            
+            out<< "Time frame:  "<< display_time(before.timestamp)<< " - "<< 
+                            display_time(after.timestamp)<< endl;
+            
+            save_diff_result(difference_between(paths_before, paths_after), 
+                            out, (std::string(5, '\n') + "DELETED PATHS: "));
+                            
+            save_diff_result(difference_between(paths_after, paths_before), 
+                            out, (std::string(5, '\n') + "CREATED PATHS: "));
+                            
+            paths_before.erase(paths_before.begin(), paths_before.end());
+            paths_after.erase(paths_after.begin(), paths_after.end());
+            if(out.is_open()) out.close();
         }
         
         if(is_file(temps).value && !is_symlink(temps).value)
@@ -252,49 +256,42 @@ namespace
         }
     }
     
-    inline std::vector<snapshot::snapshot_data> load_all_headers(const std::string& folder)
+    /** Loads all headers, as well as ids, into menu_data. This function also
+     * sorts the snapshots. */
+    inline void load_all_headers(menu_data& data)
     {
         using fsys::is_folder;
         using fsys::is_symlink;
         
-        std::unordered_map<unsigned long long, std::string> ids;
-        std::vector<snapshot::snapshot_data> snaps;
+        data.snapshots.erase(data.snapshots.begin(), data.snapshots.end());
+        data.snapshots.shrink_to_fit();
         
-        if(is_folder(folder).value && !is_symlink(folder).value)
+        data.ids.erase(data.ids.begin(), data.ids.end());
+        
+        if(is_folder(data.folder).value && !is_symlink(data.folder).value)
         {
-            ids = snapshot::list_ids(folder);
-            if(!ids.empty())
+            data.ids = snapshot::list_ids(data.folder);
+            if(!data.ids.empty())
             {
-                for(std::unordered_map<unsigned long long, std::string>::const_iterator it = ids.begin(); 
-                                it != ids.end(); ++it)
+                for(std::unordered_map<unsigned long long, std::string>::const_iterator it = data.ids.begin(); 
+                                it != data.ids.end(); ++it)
                 {
-                    snaps.push_back(snapshot::snapshot_data());
-                    if(!snapshot::load_header(snaps.back(), it->second)) snaps.pop_back();
+                    data.snapshots.push_back(snapshot::snapshot_data());
+                    if(!snapshot::load_header(data.snapshots.back(), it->second)) data.snapshots.pop_back();
                 }
             }
         }
-        return snaps;
+        if(!data.snapshots.empty())
+        {
+            std::sort(data.snapshots.begin(), data.snapshots.end(), compare_snapshots);
+        }
     }
     
-    /** Returns the path of a snapshot if it has been saved.  Otherwise it
-     * will return nothing. */
-    inline std::string file_of_snapshot(const snapshot::snapshot_data& snap, const std::string& folder)
+    /** function used to sort the snapshots. */
+    inline bool compare_snapshots(const snapshot::snapshot_data& snap1, 
+                    const snapshot::snapshot_data& snap2)
     {
-        std::string temps;
-        std::unordered_map<unsigned long long, std::string> ids;
-        
-        if(snap.id != 0)
-        {
-            ids = snapshot::list_ids(folder);
-            if(!ids.empty())
-            {
-                if(ids.find(snap.id) != ids.end())
-                {
-                    temps = ids[snap.id];
-                }
-            }
-        }
-        return temps;
+        return (snap1.timestamp > snap2.timestamp);
     }
     
     
@@ -313,20 +310,25 @@ namespace snapshot_menu
         using std::endl;
         using namespace ::snapshot;
         
+        menu_data data;
+        
         menu_return_data result;
-        std::vector<snapshot_data> snapshots(load_all_headers(folder));
         std::vector<std::string> display;
         scrollDisplay::scroll_display_class window(display);
         key_code::key_code_data ch;
         common_menu::selection_class selection;
         bool finished(false);
         
-        auto update_display = [&snapshots, &display](void)->void
+        data.folder = folder;
+        load_all_headers(data);
+        
+        auto update_display = [&data, &display](void)->void
         {
             display.clear();
-            for(unsigned int x = 0; x < snapshots.size(); x++)
+            for(unsigned int x = 0; x < data.snapshots.size(); x++)
             {
-                display.push_back(display_time(snapshots.at(x).timestamp) + "   root: \"" + snapshots[x].root + "\"");
+                display.push_back(display_time(data.snapshots[x].timestamp) + 
+                                "   root: \"" + data.snapshots[x].root + "\"");
             }
         };
         
@@ -370,10 +372,10 @@ namespace snapshot_menu
                         else if(ch == keys[end::value]) while(window.pg_down());
                         else if(ch == keys[del::value])
                         {
-                            if(!snapshots.empty())
+                            if(!data.snapshots.empty())
                             {
                                 if(common::inp::is_sure("Do you really want to \
-delete the snapshot taken on " + display_time(snapshots.at(window.gpos().whole).timestamp) + "?"))
+delete the snapshot taken on " + display_time(data.snapshots.at(window.gpos().whole).timestamp) + "?"))
                                 {
                                     //some user feedback for those with slow computers:
                                     common::cls();
@@ -382,9 +384,14 @@ delete the snapshot taken on " + display_time(snapshots.at(window.gpos().whole).
                                     cout.flush();
                                     
                                     //only erase the snapshot from the list if we successfully delete the associated file:
-                                    if(remove_snapshot(snapshots.at(window.gpos().whole), folder)) 
+                                    if(remove_snapshot(data, data.snapshots.at(window.gpos().whole).id))
                                     {
-                                        snapshots.erase(snapshots.begin() + window.gpos().whole);
+                                        if(data.ids.find(data.snapshots.at(window.gpos().whole).id) == data.ids.end())
+                                        {
+                                            ethrow("Error: Could not delete id from loaded ids!");
+                                        }
+                                        data.ids.erase(data.ids.find(data.snapshots.at(window.gpos().whole).id));
+                                        data.snapshots.erase(data.snapshots.begin() + window.gpos().whole);
                                         selection.clear();
                                     }
                                     
@@ -430,9 +437,7 @@ delete the snapshot taken on " + display_time(snapshots.at(window.gpos().whole).
                                     {
                                         if(take_snapshot(temps) != 0)
                                         {
-                                            snapshots.clear();
-                                            snapshots.shrink_to_fit();
-                                            snapshots = load_all_headers(folder);
+                                            load_all_headers(data);
                                             update_display();
                                         }
                                     }
@@ -446,8 +451,7 @@ delete the snapshot taken on " + display_time(snapshots.at(window.gpos().whole).
                         {
                             if(selection.gselection().size() > 1)
                             {
-                                diff_snapshots(file_of_snapshot(snapshots[selection[0]], folder), 
-                                                file_of_snapshot(snapshots[selection[1]], folder));
+                                diff_snapshots(data, data.snapshots.at(selection[0]), data.snapshots.at(selection[1]));
                                 selection.clear();
                             }
                         }
@@ -461,7 +465,7 @@ delete the snapshot taken on " + display_time(snapshots.at(window.gpos().whole).
                         
                         case ' ':
                         {
-                            if(!snapshots.empty())
+                            if(!data.snapshots.empty())
                             {
                                 if(!selection.is_selected(window.gpos().whole) && (selection.gselection().size() < 2)) selection.add(window.gpos().whole);
                                 else if(selection.is_selected(window.gpos().whole)) selection.remove(window.gpos().whole);
