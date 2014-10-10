@@ -57,11 +57,11 @@ namespace
         cout<< " [page down]   -  scroll one page down"<< endl;
         cout<< " [HOME]        -  jump to begin"<< endl;
         cout<< " [END]         -  jump to end"<< endl;
-        cout<< " \' \'         -  Select a snapshot"<< endl;
-        cout<< " \'c\'         -  Compare selected snapshots"<< endl;
-        cout<< " \'n\'         -  New Snapshot"<< endl;
-        cout<< " \'\\\'        -  Unselect all"<< endl;
-        cout<< " \'e\'         -  Exit"<< endl;
+        cout<< " \' \'           -  Select a snapshot"<< endl;
+        cout<< " \'c\'           -  Compare selected snapshots"<< endl;
+        cout<< " \'n\'           -  New Snapshot"<< endl;
+        cout<< " \'\\\'           -  Unselect all"<< endl;
+        cout<< " \'e\'           -  Exit"<< endl;
         common::wait();
     }
     
