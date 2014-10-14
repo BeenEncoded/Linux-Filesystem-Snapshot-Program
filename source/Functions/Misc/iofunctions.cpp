@@ -4,6 +4,7 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <term.h>
+#include <cstring>
 
 #include "iofunctions.hpp"
 #include "global_defines.hpp"
@@ -78,13 +79,16 @@ namespace output
 {
     void cls()
     {
+        char *temps(new char[10]);
+        std::strcpy(temps, "clear\0");
         if (!cur_term)
         {
             int result;
             setupterm( NULL, STDOUT_FILENO, &result );
             if (result <= 0) return;
         }
-        putp( tigetstr( "clear" ) );
+        putp( tigetstr( temps ) );
+        delete[] temps;
     }
     
     
