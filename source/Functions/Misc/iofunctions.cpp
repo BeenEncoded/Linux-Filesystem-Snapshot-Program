@@ -80,11 +80,7 @@ namespace output
     void cls()
     {
         char *temps(new char[10]);
-        
-        /*the only way I could get the compiler to not perform a direct 
-         * initialization of the array (and giving a -Wwrite-strings error due 
-         * to implicit conversion from a const char* -> char*): */
-        std::memcpy(temps, "clear\0", sizeof "clear\0");
+        std::strcpy(temps, "clear\0");
         if (!cur_term)
         {
             int result;
