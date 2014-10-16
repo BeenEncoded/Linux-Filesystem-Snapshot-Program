@@ -4,6 +4,7 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <term.h>
+#include <cstring>
 
 #include "iofunctions.hpp"
 #include "global_defines.hpp"
@@ -78,13 +79,24 @@ namespace output
 {
     void cls()
     {
+        char *temps(new char[10]);
+        
+        /*the only way I could get the compiler to not perform a direct 
+         * initialization of the array (and giving a -Wwrite-strings error due 
+         * to implicit conversion from a const char* -> char*): */
+        std::memcpy(temps, "clear\0", sizeof "clear\0");
         if (!cur_term)
         {
             int result;
             setupterm( NULL, STDOUT_FILENO, &result );
-            if (result <= 0) return;
+            if (result <= 0)
+            {
+                delete[] temps;
+                return;
+            }
         }
-        putp( tigetstr( "clear" ) );
+        putp( tigetstr( temps ) );
+        delete[] temps;
     }
     
     
