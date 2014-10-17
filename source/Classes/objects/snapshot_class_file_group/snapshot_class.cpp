@@ -21,7 +21,7 @@ namespace
     void construct_tsproc_data(take_snapshot_proc_data&, const std::string&);
     void collect_snapshot(take_snapshot_proc_data*);
     void show_process_output(take_snapshot_proc_data*);
-    void display_current_status(take_snapshot_proc_data&);
+    void display_current_status(take_snapshot_proc_data*);
     
     /* Unifies and limits the scope of the data that is used between
      * the functions of collect_snapshot and show_process_output. */
@@ -53,7 +53,7 @@ namespace
         common::cl();
         while(!pd->finished && !pd->canceled)
         {
-            display_current_status(*pd);
+            display_current_status(pd);
             std::this_thread::sleep_for(std::chrono::milliseconds(33));
             if(common::kbhit())
             {
@@ -68,25 +68,29 @@ namespace
             using std::cout;
             using std::endl;
             
-            common::cls();
             for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
             common::center("Paths Captured: " + std::to_string(pd->count));
             common::wait();
-            common::cls();
         }
     }
     
-    void display_current_status(take_snapshot_proc_data& pd)
+    void display_current_status(take_snapshot_proc_data *pd)
     {
         using std::cout;
         using std::endl;
         
-        common::cls();
-        cout<< "Press any key to cancel";
-        for(unsigned int x = 0; x < 8; x++) cout<< endl;
-        cout<< "root: \""<< pd.root<< "\""<< endl;
-        cout<< "Paths saved: "<< pd.count<< endl;
-        cout<< "Currently processing: \""<< pd.current_path<< "\""<< endl;
+        if(pd != nullptr)
+        {
+            //cur_pos I believe we're getting race conditions in the multi-threaded snapshot algorithm;
+            /* It keeps displaying buffer overflows, so I think it's trying to display a string that's
+             * being written to by the other thread. */
+            cout<< "Press any key to cancel";
+            for(unsigned int x = 0; x < 8; x++) cout<< endl;
+            cout<< "root: \""<< pd->root<< "\""<< endl;
+            cout<< "Paths saved: "<< pd->count<< endl;
+            cout<< "Currently processing: \""<< pd->current_path<< "\""<< endl;
+        }
+        else ethrow("WTF, why is pd == nullptr?!?!");
     }
     
     /** Initializes all the data for the snapshot collection.  It opens a file
