@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <regex>
+#include <cstring>
 
 #include "common.hpp"
 #include "global_defines.hpp"
@@ -42,6 +43,7 @@ namespace
         std::string folder;
     };
     
+    /* Shows basic info on how to use the main snapshot list menu. */
     inline void display_help()
     {
         using std::cout;
@@ -550,9 +552,9 @@ delete the snapshot taken on " + display_time(data.snapshots.at(window.gpos().wh
             }
             else
             {
-                if(!ch.is_control)
+                if(!ch.is_control && !ch.control_d.empty())
                 {
-                    switch(std::tolower(ch.ch()))
+                    switch(std::tolower((char)ch.control_d.front()))
                     {
                         case 'n':
                         {

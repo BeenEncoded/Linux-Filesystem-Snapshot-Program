@@ -48,120 +48,54 @@ namespace key_code
             if(k.is_control)
             {
                 out<< '{';
-                for(unsigned int x = 0; x < k.control().size(); x++)
+                for(unsigned int x = 0; x < k.control_d.size(); x++)
                 {
-                    out<< k.control()[x];
-                    if(x < (k.control().size() - 1)) out<< ' ';
+                    out<< k.control_d[x];
+                    if(x < (k.control_d.size() - 1)) out<< ' ';
                 }
                 out<< '}';
             }
             else
             {
-                out<< k.ch();
+                out<< (k.control_d.empty() ? char(0x00) : (char)k.control_d.front());
             }
         }
         return out;
     }
     
-    key_code_data::key_code_data(const key_code_data& k)
+    key_code_data::key_code_data(const char& c) : is_control(false), control_d({(int)c})
     {
-        this->is_control = k.is_control;
-        if(this->is_control) this->control_d = k.control_d;
-        else this->ch_d = k.ch_d;
     }
     
-    key_code_data::key_code_data(const char& c)
+    key_code_data::key_code_data(const std::vector<int>& c) : is_control(true), control_d(c)
     {
-        new (&(this->ch_d)) char(c);
-        this->is_control = false;
     }
     
-    key_code_data::key_code_data(const std::vector<int>& c)
+    key_code_data::key_code_data() : is_control(false), control_d()
     {
-        new (&(this->control_d)) std::vector<int>();
-        this->control_d = c;
-        this->is_control = true;
-    }
-    
-    key_code_data::key_code_data()
-    {
-        this->is_control = false;
-        this->ch_d = 0x00;
     }
     
     key_code_data::~key_code_data()
     {
-    }
-    
-    char& key_code_data::ch()
-    {
-        if(this->is_control)
-        {
-            this->control_d.~vector();
-            new (&(this->ch_d)) char();
-            this->is_control = false;
-        }
-        return this->ch_d;
-    }
-    
-    /* Warning: reading constant value can only happen directly, 
-     so if this isn't being used as a character, it will throw on error.*/
-    const char& key_code_data::ch() const
-    {
-        if(!this->is_control) return this->ch_d;
-        else throw "NOT A CHARACTER; You must first write a character to be able to read.";
-        
-        return this->ch_d;
-    }
-    
-    std::vector<int>& key_code_data::control()
-    {
-        if(!this->is_control)
-        {
-            new (&(this->control_d)) std::vector<int>();
-            this->is_control = true;
-        }
-        return this->control_d;
-    }
-    
-    /* Warning: reading constant value can only happen directly, 
-     so if this isn't being used as a control, it will throw on error.*/
-    const std::vector<int>& key_code_data::control() const
-    {
-        if(this->is_control) return this->control_d;
-        else throw "NOT A CONTROL KEY; You must first write a control key to be able to read.";
-        
-        return this->control_d;
+        this->control_d.clear();
+        this->control_d.shrink_to_fit();
     }
     
     const key_code_data& key_code_data::operator=(const key_code_data& k)
     {
         if(this != &k)
         {
-            if(this->is_control) this->control_d.~vector();
-            
             this->is_control = k.is_control;
-            
-            if(k.is_control)
-            {
-                new (&(this->control_d)) std::vector<int>(k.control_d);
-            }
-            else new (&(this->ch_d)) char(k.ch_d);
+            this->control_d = k.control_d;
         }
         return *this;
     }
     
     bool key_code_data::operator==(const key_code_data& k) const
     {
-        /* Due to the nature of the union, we will have to make sure that
-         we read from the correct character first: */
-        if(this->is_control == k.is_control)
-        {
-            if(this->is_control) return (this->control_d == k.control_d);
-            else return (this->ch_d == k.ch_d);
-        }
-        
-        return false;
+        return (
+                    (this->is_control == k.is_control) &&
+                    (this->control_d == k.control_d));
     }
     
     bool key_code_data::operator!=(const key_code_data& k) const
@@ -182,9 +116,9 @@ namespace key_code
     {
         if(k.is_control)
         {
-            if(k.control().size() > 0)
+            if(!k.control_d.empty())
             {
-                return (k.control()[0] == 27);
+                return (k.control_d[0] == 27);
             }
         }
         return false;

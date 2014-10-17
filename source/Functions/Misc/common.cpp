@@ -59,21 +59,21 @@ namespace common
     key_code::key_code_data getch_funct()
     {
         using key_code::key_code_data;
+        using key_code::is_listed_control;
+        using key_code::might_be_control;
         
+        //initialize a complex key code: we need to be ready for anything: 
         key_code_data key;
-        char ch;
         
+        key.is_control = true;
         do
         {
-            key.control().push_back((int)input::getch().ch());
-        }while(key_code::might_be_control(key) && input::kbhit() && 
-                !key_code::is_listed_control(key));
+            key.control_d.push_back(input::getch().control_d.front());
+        }while(might_be_control(key) && input::kbhit() && !is_listed_control(key));
         
-        if(!key_code::might_be_control(key) && (key.control().size() > 0) && 
-                !key_code::is_listed_control(key))
+        if(!might_be_control(key) && !key.control_d.empty() && !is_listed_control(key))
         {
-            ch = key.control()[0];
-            key.ch() = ch;
+            if(key.control_d.size() == 1) key = key_code_data((char)key.control_d.front());
         }
         
         return key;
@@ -212,28 +212,31 @@ namespace common
                 center("Y/N");
                 
                 ch = common::gkey();
-                if(is_char(ch.ch()))
+                if(!ch.control_d.empty() && !ch.is_control)
                 {
-                    switch(tolower(ch.ch()))
+                    if(is_char((char)ch.control_d.front()))
                     {
-                        case 'y':
+                        switch(tolower((char)ch.control_d.front()))
                         {
-                            finished = true;
-                            sure = true;
+                            case 'y':
+                            {
+                                finished = true;
+                                sure = true;
+                            }
+                            break;
+                            
+                            case 'n':
+                            {
+                                finished = true;
+                                sure = false;
+                            }
+                            break;
+                            
+                            default:
+                            {
+                            }
+                            break;
                         }
-                        break;
-                        
-                        case 'n':
-                        {
-                            finished = true;
-                            sure = false;
-                        }
-                        break;
-                        
-                        default:
-                        {
-                        }
-                        break;
                     }
                 }
             }while(!finished);
@@ -265,27 +268,28 @@ namespace common
                 key = getch_funct();
                 if(is_listed_control(key))
                 {
-                    if(key == keys[code::backspace::value])
+                    using namespace key_code::code;
+                    if(key == keys[backspace::value])
                     {
                         if(input.size() > 0) input.resize((input.size() - 1));
                     }
-                    else if(key == keys[code::end::value])
+                    else if(key == keys[end::value])
                     {
                         input = GSTRING_CANCEL;
                         finished = true;
                     }
-                    else if(key == keys[code::del::value])
+                    else if(key == keys[del::value])
                     {
                         if(!input.empty()) input.erase();
                     }
                 }
                 else
                 {
-                    if(!key.is_control)
+                    if(!key.is_control && !key.control_d.empty())
                     {
-                        if(is_char(key.ch()))
+                        if(is_char((char)key.control_d.front()))
                         {
-                            input += key.ch();
+                            input += (char)key.control_d.front();
                         }
                         else
                         {

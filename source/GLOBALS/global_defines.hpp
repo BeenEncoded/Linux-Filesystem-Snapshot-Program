@@ -61,7 +61,6 @@ namespace key_code
     class key_code_data
     {
     public:
-        key_code_data(const key_code_data&);
         explicit key_code_data(const std::vector<int>&);
         explicit key_code_data(const char&);
         explicit key_code_data();
@@ -72,21 +71,10 @@ namespace key_code
         bool operator==(const key_code_data&) const;
         bool operator!=(const key_code_data&) const;
         
-        /* Allows the safe reference of the union variables: */
-        char& ch();
-        const char& ch() const;
-        
-        std::vector<int>& control();
-        const std::vector<int>& control() const;
-        
         //I try to make this as small as possible:
         bool is_control : 1;
         
-        union
-        {
-            char ch_d;
-            std::vector<int> control_d;
-        };
+        std::vector<int> control_d;
     };
     
     namespace code

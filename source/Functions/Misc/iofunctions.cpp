@@ -24,7 +24,7 @@ namespace input
         
         tcsetattr(STDIN_FILENO, TCSANOW, &cur_term);
         
-        return key_code::key_code_data(ch);
+        return key_code::key_code_data(char(ch));
     }
     
     bool kbhit()
