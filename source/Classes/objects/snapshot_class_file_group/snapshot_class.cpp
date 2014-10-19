@@ -16,18 +16,24 @@
 
 namespace
 {
+    typedef const_int_type<75> max_path_size;
+    
     struct take_snapshot_proc_data;
     
     void construct_tsproc_data(take_snapshot_proc_data&, const std::string&);
     void collect_snapshot(take_snapshot_proc_data*);
     void show_process_output(take_snapshot_proc_data*);
     void display_current_status(take_snapshot_proc_data*);
+    std::string filename(const std::string&);
+    std::string format_current_path(const std::string&, const std::size_t&);
+    
     
     /* Unifies and limits the scope of the data that is used between
      * the functions of collect_snapshot and show_process_output. */
     struct take_snapshot_proc_data
     {
-        std::string root, save_file, current_path;
+        std::string root, save_file;
+        char *current_path;
         bool finished : 1, canceled : 1, paused : 1;
         unsigned long long sid, count;
         std::ofstream out;
@@ -37,10 +43,15 @@ namespace
     {
         using fsys::tree_riterator_class;
         
+        if(pd == nullptr) ethrow("pd is null!");
+        
         for(tree_riterator_class it(pd->root); (!it.at_end() && !pd->canceled); ++it)
         {
             (pd->out)<< it.value()<< mem_delim::value;
-            pd->current_path = it.value();
+            
+            std::strcpy(pd->current_path, std::string(max_path_size::value, '\0').c_str());
+            std::strcpy(pd->current_path, format_current_path((it.value() + '\0'), max_path_size::value).c_str());
+            
             pd->count++;
             while(pd->paused) std::this_thread::sleep_for(std::chrono::milliseconds(33));
         }
@@ -50,6 +61,7 @@ namespace
     
     void show_process_output(take_snapshot_proc_data *pd)
     {
+        if(pd == nullptr) ethrow("pd is null!");
         common::cl();
         while(!pd->finished && !pd->canceled)
         {
@@ -68,22 +80,25 @@ namespace
             using std::cout;
             using std::endl;
             
+            common::cls();
             for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
             common::center("Paths Captured: " + std::to_string(pd->count));
             common::wait();
+            common::cls();
+            cout<< "running...";
+            cout.flush();
         }
     }
     
-    void display_current_status(take_snapshot_proc_data *pd)
+    inline void display_current_status(take_snapshot_proc_data *pd)
     {
         using std::cout;
         using std::endl;
+        if(pd == nullptr) ethrow("pd is null!");
         
         if(pd != nullptr)
         {
-            //cur_pos I believe we're getting race conditions in the multi-threaded snapshot algorithm;
-            /* It keeps displaying buffer overflows, so I think it's trying to display a string that's
-             * being written to by the other thread. */
+            common::cls();
             cout<< "Press any key to cancel";
             for(unsigned int x = 0; x < 8; x++) cout<< endl;
             cout<< "root: \""<< pd->root<< "\""<< endl;
@@ -96,7 +111,7 @@ namespace
     /** Initializes all the data for the snapshot collection.  It opens a file
      * and saves the header to a "new" snapshot, and it should be used before 
      * executing a new snapshot. */
-    void construct_tsproc_data(take_snapshot_proc_data& pd, const std::string& rt)
+    inline void construct_tsproc_data(take_snapshot_proc_data& pd, const std::string& rt)
     {
         snapshot::snapshot_data head;
         
@@ -112,13 +127,54 @@ namespace
         pd.finished = false;
         pd.paused = false;
         pd.count = 0;
-        pd.current_path = "";
+        pd.current_path = new char[max_path_size::value];
+        
+        //blank the new string:
+        std::strcpy(pd.current_path, std::string(max_path_size::value, '\0').c_str());
         
         head.timestamp = tdata::current_time();
         head.root = pd.root;
         head.id = pd.sid;
         pd.out.open(pd.save_file.c_str(), std::ios::binary);
         snapshot::out_header(pd.out, head);
+    }
+    
+    inline std::string filename(const std::string& s)
+    {
+        std::string temps(s);
+        std::size_t pos(temps.rfind(fsys::pref_slash()));
+        
+        if(pos != std::string::npos)
+        {
+            temps.erase(temps.begin(), (temps.begin() + pos + 1));
+        }
+        return temps;
+    }
+    
+    inline std::string format_current_path(const std::string& s, const std::size_t& size)
+    {
+        std::string temps(s), newend("/.../" + filename(s));
+        
+        if(!temps.empty())
+        {
+            if(filename(temps).size() < size)
+            {
+                if(temps.size() > size)
+                {
+                    temps = common::parent_folder(temps);
+                    while(((temps.size() + newend.size()) > size) && !temps.empty() && 
+                                    (temps != std::to_string(fsys::pref_slash())))
+                    {
+                        temps = common::parent_folder(temps);
+                    }
+                    temps += newend;
+                }
+            }
+            else temps = filename(temps);
+        }
+        
+        if(temps.size() > size) temps.erase(temps.begin(), (temps.begin() + (temps.size() - size)));
+        return temps;
     }
     
     
@@ -239,7 +295,10 @@ namespace snapshot
             }
         }
         id = pd->sid;
+        delete[] pd->current_path;
+        pd->current_path = nullptr;
         delete pd;
+        pd = nullptr;
         return id;
     }
     

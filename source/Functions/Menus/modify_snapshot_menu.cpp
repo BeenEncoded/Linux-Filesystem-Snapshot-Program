@@ -440,6 +440,8 @@ namespace
 namespace snapshot_menu
 {
     
+    /** Shows a menu that allows a user to select from all the saved snapshots, and
+     * make modifications.  "folder" is the folder that the snapshots are saved in. */
     common_menu::menu_return_data main_snapshot_menu(const std::string& folder)
     {
         using namespace common_menu;

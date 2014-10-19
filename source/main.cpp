@@ -8,7 +8,6 @@ namespace
     void main_menu();
     
     
-    
     inline void main_menu()
     {
         snapshot_menu::main_snapshot_menu(snapshot::snapshot_folder());
