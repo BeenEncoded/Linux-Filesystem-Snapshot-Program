@@ -57,7 +57,6 @@ namespace key_code
     bool is_listed_control(const key_code_data&);
     bool might_be_control(const key_code_data&);
     
-    //todo eliminate unions from this object
     class key_code_data
     {
     public:
