@@ -54,10 +54,10 @@ namespace tdata
         bool operator>=(const time_class&) const;
         
         //mathematical ops: 
-        const time_class& operator++(int);
+        const time_class& operator++();
         time_class        operator+(int) const;
         const time_class& operator+=(int);
-        const time_class& operator--(int);
+        const time_class& operator--();
         time_class        operator-(int) const;
         const time_class& operator-=(int);
         
