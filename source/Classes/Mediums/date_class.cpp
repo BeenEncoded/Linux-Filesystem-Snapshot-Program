@@ -108,7 +108,7 @@ namespace date
         return in;
     }
     
-    void date_val::operator=(const date_val& i)
+    date_val& date_val::operator=(const date_val& i)
     {
         if(this != &i)
         {
@@ -118,15 +118,17 @@ namespace date
             this->weekday = i.weekday;
             this->year = i.year;
         }
+        return *this;
     }
 
-    void date_val::operator=(const struct tm& i)
+    date_val& date_val::operator=(const struct tm& i)
     {
         this->year = (1900 + i.tm_year);
         this->month = i.tm_mon;
         this->weekday = i.tm_wday;
         this->mday = (i.tm_mday - 1);
         this->yday = i.tm_yday;
+        return *this;
     }
 
     bool date_val::operator==(const date_val& i) const

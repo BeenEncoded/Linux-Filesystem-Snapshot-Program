@@ -47,7 +47,7 @@ namespace fsys
     struct result_data_boolean
     {
         
-        const result_data_boolean& operator=(const result_data_boolean& res)
+        result_data_boolean& operator=(const result_data_boolean& res)
         {
             if(this != &res)
             {
@@ -87,7 +87,7 @@ namespace fsys
         
         ~tree_iterator_class();
         
-        const tree_iterator_class& operator=(const tree_iterator_class&);
+        tree_iterator_class& operator=(const tree_iterator_class&);
         tree_iterator_class operator++();
         
         unsigned int count_from_end() const;
@@ -111,7 +111,7 @@ namespace fsys
         
         virtual ~tree_riterator_class();
         
-        virtual const tree_riterator_class& operator=(const tree_riterator_class&);
+        virtual tree_riterator_class& operator=(const tree_riterator_class&);
         virtual tree_riterator_class operator++();
         
         unsigned int count_from_end();
@@ -136,7 +136,7 @@ namespace fsys
         
         ~copy_iterator_class();
         
-        const tree_riterator_class& operator=(const copy_iterator_class&);
+        tree_riterator_class& operator=(const copy_iterator_class&);
         tree_riterator_class operator++();
         void skip();
         
@@ -159,7 +159,7 @@ namespace fsys
         
         ~delete_iterator_class();
         
-        const tree_riterator_class& operator=(const delete_iterator_class&);
+        tree_riterator_class& operator=(const delete_iterator_class&);
         tree_riterator_class operator++();
         void skip();
         

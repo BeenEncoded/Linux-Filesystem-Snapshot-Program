@@ -136,6 +136,8 @@ namespace
         head.root = pd.root;
         head.id = pd.sid;
         pd.out.open(pd.save_file.c_str(), std::ios::binary);
+        if(!pd.out.good()) ethrow(std::string("Error, out is not good!  File: \"" + 
+                        pd.save_file + "\""));
         snapshot::out_header(pd.out, head);
     }
     

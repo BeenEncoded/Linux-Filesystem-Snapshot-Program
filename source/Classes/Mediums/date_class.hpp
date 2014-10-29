@@ -20,8 +20,8 @@ namespace date
      of dates, and converting that into, and from, struct tm.*/
     struct date_val
     {
-        void operator=(const date_val&);
-        void operator=(const struct tm&);
+        date_val& operator=(const date_val&);
+        date_val& operator=(const struct tm&);
         
         bool operator==(const date_val&) const;
         bool operator!=(const date_val&) const;

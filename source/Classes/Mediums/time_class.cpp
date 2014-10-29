@@ -155,7 +155,7 @@ namespace tdata
         return this->cur_time;
     }
     
-    const time_class& time_class::operator=(const time_class& t)
+    time_class& time_class::operator=(const time_class& t)
     {
         if(this != &t)
         {
@@ -164,7 +164,7 @@ namespace tdata
         return *this;
     }
     
-    const time_class& time_class::operator=(const struct tm& t)
+    time_class& time_class::operator=(const struct tm& t)
     {
         if(&(this->cur_time) != (&t))
         {

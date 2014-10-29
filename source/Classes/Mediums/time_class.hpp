@@ -42,8 +42,8 @@ namespace tdata
         
         const struct tm& value() const;
         
-        const time_class& operator=(const time_class&);
-        const time_class& operator=(const struct tm&);
+        time_class& operator=(const time_class&);
+        time_class& operator=(const struct tm&);
         
         //comparisons
         bool operator==(const time_class&) const;

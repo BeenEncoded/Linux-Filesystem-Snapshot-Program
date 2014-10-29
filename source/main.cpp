@@ -7,7 +7,7 @@ namespace
 {
     void main_menu();
     
-    
+    /* cur_pos need to implement the regular expressions into the program. */
     inline void main_menu()
     {
         snapshot_menu::main_snapshot_menu(snapshot::snapshot_folder());

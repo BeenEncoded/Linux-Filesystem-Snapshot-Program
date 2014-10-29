@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <stdexcept>
 #include <algorithm>
+#include <fstream>
 #include <regex>
 #include <cstring>
 
@@ -243,7 +244,7 @@ namespace
     }
 
     /** Returns the full path of the record folder given the snapshot
-     * folder being used. */
+     * folder being used.  Not as functional as it is asthetic (in the code). */
     inline std::string record_folder(const std::string& folder)
     {
         return std::string(folder + fsys::pref_slash() + 
@@ -349,7 +350,9 @@ namespace
             }
         };
         
-        if((data.ids.find(before.id) != data.ids.end()) && (data.ids.find(after.id) != data.ids.end()))
+        if((data.ids.find(before.id) != data.ids.end()) && 
+                        (data.ids.find(after.id) != data.ids.end()) && 
+                        create_record_folder(data.folder))
         {
             if(after.timestamp < before.timestamp)
             {

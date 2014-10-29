@@ -7,6 +7,28 @@
 
 #include "filesystem.hpp"
 
+
+//error reporting:
+#ifndef ethrow
+    
+#define FILESYSTEM_USE_RUNTIME_ERRORS true
+
+
+#if FILESYSTEM_USE_RUNTIME_ERRORS == true
+
+#include <stdexcept>
+#include <exception>
+#include <string>
+#define ethrow(MSG) throw std::runtime_error(("EXCEPTION THROWN: \"" + std::string(__FILE__)\
++ "\"  @ Line " + std::to_string(__LINE__) + ": " + std::string(MSG)))
+    
+#else
+    #define ethrow(MSG)
+#endif
+
+#endif
+
+
 namespace
 {
     bool is_error(const boost::system::error_code&);
@@ -26,14 +48,11 @@ namespace
     inline std::string parent_path(const std::string& s)
     {
         std::string temps(s);
-        bool slash_hit(false);
-        if(s.size() > std::string(boost::filesystem::path("/").make_preferred().string()).size())
+        std::size_t pos(temps.rfind(fsys::pref_slash()));
+        
+        if(pos != std::string::npos)
         {
-            while((temps.size() > 1) && !slash_hit)
-            {
-                if(temps.back() == boost::filesystem::path("/").make_preferred().string()[0]) slash_hit = true;
-                temps.erase((temps.begin() + (temps.size() - 1)));
-            }
+            temps.erase((temps.begin() + pos), temps.end());
         }
         return temps;
     }
@@ -77,9 +96,9 @@ namespace
                         levels++;
                     }
                 }
-                catch(...)
+                catch(const std::exception& e)
                 {
-                    throw;
+                    ethrow(e.what());
                 }
                 s = prev_p.string();
             }
@@ -98,15 +117,15 @@ namespace
                             boost::filesystem::path(to + boost::filesystem::path("/").make_preferred().string() + 
                                     boost::filesystem::path(from).filename().string()));
                 }
-                catch(...)
+                catch(const std::exception& e)
                 {
-                    throw;
+                    ethrow(e.what());
                 }
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         
         if(source != from)
@@ -118,9 +137,9 @@ namespace
                 {
                     temp_b = get_folder(temps);
                 }
-                catch(...)
+                catch(const std::exception& e)
                 {
-                    throw;
+                    ethrow(e.what());
                 }
                 newfrom = source;
                 for(int x = 0; x < levels; x++) newfrom = parent_path(newfrom);
@@ -132,9 +151,9 @@ namespace
                         boost::filesystem::copy_directory(newfrom, temps, err);
                     }
                 }
-                catch(...)
+                catch(const std::exception& e)
                 {
-                    throw;
+                    ethrow(e.what());
                 }
             }
         }
@@ -145,9 +164,9 @@ namespace
                     boost::filesystem::is_directory(boost::filesystem::path(newpath), err) && 
                     !boost::filesystem::is_symlink(newpath));
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return temp_b;
     }
@@ -168,9 +187,9 @@ namespace
         {
             result.value = f(p, err);
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         if(is_error(err))
         {
@@ -184,16 +203,16 @@ namespace
         if((!fsys::is_folder(p.string()) && !fsys::is_file(p.string())) || (fsys::is_folder(p.string()).value && 
                 fsys::is_symlink(p.string()).value))
         {
-            throw "ERROR:  Cannot construct iterator with invalid pathname";
+            ethrow("[PROGRAMMING ERROR]  Cannot construct iterator with invalid pathname");
         }
         boost::filesystem::directory_iterator it;
         try
         {
             it = boost::filesystem::directory_iterator(p);
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return it;
     }
@@ -203,16 +222,16 @@ namespace
         if((!fsys::is_folder(p.string()) && !fsys::is_file(p.string())) || (fsys::is_folder(p.string()).value && 
                 fsys::is_symlink(p.string()).value))
         {
-            throw "ERROR:  Cannot construct iterator with invalid pathname";
+            ethrow("[PROGRAMMING ERROR]  Cannot construct iterator with invalid pathname");
         }
         boost::filesystem::recursive_directory_iterator it;
         try
         {
             it = boost::filesystem::recursive_directory_iterator(p);
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return it;
     }
@@ -265,6 +284,10 @@ namespace
                         {
                             res.value = false;
                             res.error = e.what();
+                            if((sizeof e.what()) == 0)
+                            {
+                                ethrow("Emtpy error message thrown here!");
+                            }
                         }
                     }
                     break;
@@ -300,9 +323,9 @@ namespace
                                                     boost::filesystem::copy(it.value(), temps);
                                                 }
                                             }
-                                            catch(...)
+                                            catch(const std::exception& e)
                                             {
-                                                throw;
+                                                ethrow(e.what());
                                             }
                                         }
                                         break;
@@ -323,10 +346,10 @@ namespace
                                 ++it;
                             }
                         }
-                        catch(...)
+                        catch(const std::exception& e)
                         {
                             res.value = false;
-                            throw;
+                            ethrow(e.what());
                         }
                     }
                     break;
@@ -460,7 +483,7 @@ namespace fsys
     {
     }
     
-    const tree_iterator_class& tree_iterator_class::operator=(const tree_iterator_class& t)
+    tree_iterator_class& tree_iterator_class::operator=(const tree_iterator_class& t)
     {
         if(this != &t)
         {
@@ -476,9 +499,9 @@ namespace fsys
                     while((this->it != this->end) && (this->it->path() != t.it->path())) ++(*this);
                 }
             }
-            catch(...)
+            catch(const std::exception& e)
             {
-                throw;
+                ethrow(e.what());
             }
         }
         return *this;
@@ -494,9 +517,9 @@ namespace fsys
                 {
                     this->it++;
                 }
-                catch(...)
+                catch(const std::exception& e)
                 {
-                    throw;
+                    ethrow(e.what());
                 }
             }
         }
@@ -520,9 +543,9 @@ namespace fsys
                 }
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return count;
     }
@@ -547,9 +570,9 @@ namespace fsys
                 }
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return count;
     }
@@ -596,7 +619,7 @@ namespace fsys
     {
     }
     
-    const tree_riterator_class& tree_riterator_class::operator=(const tree_riterator_class& t)
+    tree_riterator_class& tree_riterator_class::operator=(const tree_riterator_class& t)
     {
         if(this != &t)
         {
@@ -642,9 +665,9 @@ namespace fsys
                     {
                         this->it++;
                     }
-                    catch(...)
+                    catch(const std::exception& e)
                     {
-                        throw;
+                        ethrow(e.what());
                     }
                 }
             }
@@ -661,16 +684,15 @@ namespace fsys
             {
                 tree_riterator_class tempit;
                 tempit = *this;
-                //while(!tempit.at_end() && (tempit.it->path() != this->it->path())) tempit++;
                 while(!tempit.at_end())
                 {
                     ++tempit;
                     count++;
                 }
             }
-            catch(...)
+            catch(const std::exception& e)
             {
-                throw;
+                ethrow(e.what());
             }
         }
         return count;
@@ -690,9 +712,9 @@ namespace fsys
                     tempi++;
                 }
             }
-            catch(...)
+            catch(const std::exception& e)
             {
-                throw;
+                ethrow(e.what());
             }
         }
         return tempi;
@@ -707,9 +729,9 @@ namespace fsys
             {
                 temps = this->it->path().string();
             }
-            catch(...)
+            catch(const std::exception& e)
             {
-                throw;
+                ethrow(e.what());
             }
         }
         return temps;
@@ -736,13 +758,13 @@ namespace fsys
                     (fsys::is_folder(from).value && fsys::is_symlink(from).value) || 
                     (fsys::is_folder(to).value && fsys::is_symlink(to).value))
             {
-                throw "Error: copy_iterator_class::copy_iterator_class(const std::string&) -> can not construct with \
-invalid path!  Args can only be a folder.";
+                ethrow("Error: copy_iterator_class::copy_iterator_class(const std::string&) -> can not construct with \
+invalid path!  Args can only be a folder.");
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         if(boost::filesystem::is_empty(this->p)) this->err = fsys::fcopy(from, to);
     }
@@ -768,9 +790,9 @@ invalid path!  Args can only be a folder.";
                     {
                         this->err.value = copy_directories(this->p.string(), this->dest, this->value());
                     }
-                    catch(...)
+                    catch(const std::exception& e)
                     {
-                        throw;
+                        ethrow(e.what());
                     }
                     if(!this->err.value)
                     {
@@ -850,9 +872,9 @@ invalid path!  Args can only be a folder.";
                             break;
                         }
                     }
-                    catch(...)
+                    catch(const std::exception& e)
                     {
-                        throw;
+                        ethrow(e.what());
                     }
                 }
             }
@@ -877,14 +899,14 @@ invalid path!  Args can only be a folder.";
                 tree_riterator_class::operator++();
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return *this;
     }
     
-    const tree_riterator_class& copy_iterator_class::operator=(const copy_iterator_class& iter)
+    tree_riterator_class& copy_iterator_class::operator=(const copy_iterator_class& iter)
     {
         if(this != &iter)
         {
@@ -921,9 +943,9 @@ invalid path!  Args can only be a folder.";
 can not construct object with invalid pathname!  Path must be a folder!";
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         if(boost::filesystem::is_empty(this->p, ec))
         {
@@ -935,7 +957,7 @@ can not construct object with invalid pathname!  Path must be a folder!";
     {
     }
     
-    const tree_riterator_class& delete_iterator_class::operator=(const delete_iterator_class& d)
+    tree_riterator_class& delete_iterator_class::operator=(const delete_iterator_class& d)
     {
         if(this != &d)
         {
@@ -1016,9 +1038,9 @@ unknown error: can_delete returned false for un-completed delete_iterator!");
                         }
                     }
                 }
-                catch(...)
+                catch(const std::exception& e)
                 {
-                    throw;
+                    ethrow(e.what());
                 }
             }
             else
@@ -1026,9 +1048,9 @@ unknown error: can_delete returned false for un-completed delete_iterator!");
                 this->err.value = true;
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         
         try
@@ -1050,9 +1072,9 @@ _class::operator++()  line " + std::to_string(__LINE__) + ": could not delete \"
                 }
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         
         return *this;
@@ -1102,9 +1124,9 @@ namespace fsys
                                     err);
                             res.value = true;
                         }
-                        catch(...)
+                        catch(const std::exception& e)
                         {
-                            throw;
+                            ethrow(e.what());
                         }
                         if(is_error(err))
                         {
@@ -1118,9 +1140,9 @@ namespace fsys
                         {
                             res = recurs_folder_copy(from, to);
                         }
-                        catch(...)
+                        catch(const std::exception& e)
                         {
-                            throw;
+                            ethrow(e.what());
                         }
                     }
                     else if(fsys::is_symlink(from).value)
@@ -1134,9 +1156,9 @@ namespace fsys
                                     err);
                             res.value = true;
                         }
-                        catch(...)
+                        catch(const std::exception& e)
                         {
-                            throw;
+                            ethrow(e.what());
                         }
                         if(is_error(err))
                         {
@@ -1165,9 +1187,9 @@ namespace fsys
                 break;
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return res;
     }
@@ -1177,41 +1199,35 @@ namespace fsys
     {
         result_data_boolean res;
         boost::system::error_code ec;
-        switch(is_folder(s).value && !is_symlink(s).value)
+        if(!is_folder(s).value)
         {
-            case true:
+            try
             {
-                res.value = false;
-                res.error = ("result_data_boolean create_folder(const std::string& s)\
- ::: ERROR> \"" + s + "\" already exists!  Could not create directory.");
-            }
-            break;
-            
-            case false:
-            {
-                res.value = true;
-                try
-                {
-                    boost::filesystem::create_directories(boost::filesystem::path(s),
-                            ec);
-                    if(is_error(ec))
-                    {
-                        res.value = false;
-                        res.error = ec.message();
-                    }
-                }
-                catch(...)
+                boost::filesystem::create_directories(boost::filesystem::path(s),
+                        ec);
+                if(is_error(ec))
                 {
                     res.value = false;
-                    throw;
+                    res.error = ec.message();
                 }
             }
-            break;
-            
-            default:
+            catch(const std::exception& e)
             {
+                res.value = false;
+                ethrow(e.what());
             }
-            break;
+        }
+        if(is_folder(s).value && !is_symlink(s).value)
+        {
+            res.value = true;
+        }
+        else
+        {
+            res.value = false;
+            if(res.error.empty())
+            {
+                res.error = "Folder wasn't created.  No erorr specified!";
+            }
         }
         return res;
     }
@@ -1243,6 +1259,10 @@ namespace fsys
                         res.value = false;
                         res.error = ec.message();
                     }
+                    else
+                    {
+                        res.value = (is_folder(to).value || is_symlink(to).value || is_file(to).value);
+                    }
                 }
                 break;
                 
@@ -1252,9 +1272,9 @@ namespace fsys
                 break;
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return res;
     }
@@ -1277,12 +1297,6 @@ namespace fsys
                         res.error = "Unknown error...  remove returned fail";
                     }
                 }
-                if(is_folder(s).value)
-                {
-                    res.value = false;
-                    res.error = ("result_data_boolean fdelete(const std::string&\
- s) ::: ERROR> \"" + s + "\"  path could not be deleted.");
-                }
             }
             if(is_file(s).value || is_symlink(s).value)
             {
@@ -1295,9 +1309,9 @@ namespace fsys
                 }
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return res;
     }
@@ -1315,9 +1329,9 @@ namespace fsys
                     res = frename(from, (to + boost::filesystem::path("/").make_preferred().string() + 
                             boost::filesystem::path(from).filename().string()));
                 }
-                catch(...)
+                catch(const std::exception& e)
                 {
-                    throw;
+                    ethrow(e.what());
                 }
             }
             break;
@@ -1347,9 +1361,9 @@ ation failed!");
         {
             result = boost_bool_funct(isfile, s);
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return result;
     }
@@ -1362,9 +1376,9 @@ ation failed!");
         {
             result = boost_bool_funct(isfolder, s);
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return result;
     }
@@ -1377,9 +1391,9 @@ ation failed!");
         {
             result = boost_bool_funct(issym, s);
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return result;
     }
@@ -1405,9 +1419,9 @@ ation failed!");
                 }
             }
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return tempb;
     }
@@ -1425,9 +1439,9 @@ ation failed!");
         {
             res.value = copy_directories(from, to, source);
         }
-        catch(...)
+        catch(const std::exception& e)
         {
-            throw;
+            ethrow(e.what());
         }
         return res;
     }
