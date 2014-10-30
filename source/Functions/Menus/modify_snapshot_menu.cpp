@@ -33,6 +33,8 @@ namespace
                     const std::unordered_set<std::string>&);
     std::unordered_set<std::string> load_paths(const std::string&);
     bool compare_snapshots(const snapshot::snapshot_data&, const snapshot::snapshot_data&);
+    void man_regex();
+    
     
     
     /** Data that this menu, and most functions is calls, needs 
@@ -317,6 +319,7 @@ namespace
         return paths;
     }
     
+    /** Finds the created and deleted paths between two snapshots. */
     inline void diff_snapshots(const menu_data& data, const snapshot::snapshot_data& snap1, 
                     const snapshot::snapshot_data& snap2)
     {
