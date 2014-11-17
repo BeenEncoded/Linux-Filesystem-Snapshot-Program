@@ -1,5 +1,5 @@
 #ifndef PROGRAM_SETTINGS_HPP_INCLUDED
-#deifne PROGRAM_SETTINGS_HPP_INCLUDED
+#define PROGRAM_SETTINGS_HPP_INCLUDED
 #include <regex>
 #include <vector>
 
