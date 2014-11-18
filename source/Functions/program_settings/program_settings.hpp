@@ -14,19 +14,15 @@ namespace settings
     std::istream& operator>>(std::istream&, regex_data&);
     std::ostream& operator<<(std::ostream&, const regex_data&);
     
+    std::istream& operator>>(std::istream&, regex_settings_data&) noexcept;
+    std::ostream& operator<<(std::ostream&, const regex_settings_data&) noexcept;
+    
     /* One Regular expression. */
     typedef struct regex_data
     {
-        explicit regex_data() noexcept
-        {
-        }
+        explicit regex_data() noexcept {}
+        ~regex_data() noexcept {}
         
-        ~regex_data() noexcept
-        {
-        }
-        
-        /* cur_pos write operators for each settings structure.  We'll also 
-         * need stream operators for saving them. */
         regex_data& operator=(const regex_data&) noexcept;
         bool operator==(const regex_data&) const noexcept;
         bool operator!=(const regex_data&) const noexcept;
@@ -35,14 +31,31 @@ namespace settings
         std::string s;
     } regex_data;
     
+    /* A list of regular expression to match, and !match against, as well
+     * as a bool that specifies whether to use this feature at all. */
     typedef struct regex_settings_data
     {
-        bool use_regex, use_match, use_not_match;
+        explicit regex_settings_data() noexcept {}
+        ~regex_settings_data() noexcept {}
+        
+        regex_settings_data& operator=(const regex_settings_data&) noexcept;
+        bool operator==(const regex_settings_data&) const noexcept;
+        bool operator!=(const regex_settings_data&) const noexcept;
+        
+        bool use_regex : 1, use_match : 1, use_not_match : 1;
         std::vector<regex_data> match, not_match;
     } regex_settings_data;
     
+    /* cur_pos write operators for settings_data: */
     typedef struct settings_data
     {
+        explicit settings_data() noexcept {}
+        ~settings_data() noexcept {}
+        
+        settings_data& operator=(const settings_data&) noexcept;
+        bool operator==(const settings_data&) const noexcept;
+        bool operator!=(const settings_data&) const noexcept;
+        
         regex_settings_data regex_settings;
     } settings_data;
     

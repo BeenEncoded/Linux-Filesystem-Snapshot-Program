@@ -18,26 +18,26 @@ namespace
 {
     typedef const_int_type<75> max_path_size;
     
-    struct take_snapshot_proc_data;
+    typedef struct take_snapshot_proc_data take_snapshot_proc_data;
     
     void construct_tsproc_data(take_snapshot_proc_data&, const std::string&);
     void collect_snapshot(take_snapshot_proc_data*);
     void show_process_output(take_snapshot_proc_data*);
     void display_current_status(take_snapshot_proc_data*);
-    std::string filename(const std::string&);
-    std::string format_current_path(const std::string&, const std::size_t&);
+    std::string filename(const std::string&) noexcept;
+    std::string format_current_path(const std::string&, const std::size_t&) noexcept;
     
     
     /* Unifies and limits the scope of the data that is used between
      * the functions of collect_snapshot and show_process_output. */
-    struct take_snapshot_proc_data
+    typedef struct take_snapshot_proc_data
     {
         std::string root, save_file;
         char *current_path;
         bool finished : 1, canceled : 1, paused : 1;
         unsigned long long sid, count;
         std::ofstream out;
-    };
+    } take_snapshot_proc_data;
     
     void collect_snapshot(take_snapshot_proc_data *pd)
     {
@@ -141,7 +141,7 @@ namespace
         snapshot::out_header(pd.out, head);
     }
     
-    inline std::string filename(const std::string& s)
+    inline std::string filename(const std::string& s) noexcept
     {
         std::string temps(s);
         std::size_t pos(temps.rfind(fsys::pref_slash()));
@@ -153,7 +153,7 @@ namespace
         return temps;
     }
     
-    inline std::string format_current_path(const std::string& s, const std::size_t& size)
+    inline std::string format_current_path(const std::string& s, const std::size_t& size) noexcept
     {
         std::string temps(s), newend("/.../" + filename(s));
         
@@ -185,7 +185,7 @@ namespace
 /* stream operators: */
 namespace snapshot
 {
-    std::ostream& operator<<(std::ostream& out, const snapshot_data& snap)
+    std::ostream& operator<<(std::ostream& out, const snapshot_data& snap) noexcept
     {
         if(out.good())
         {
@@ -201,7 +201,7 @@ namespace snapshot
     }
     
     /** Sets failbit only if it fails to retrieve the snapshot. */
-    std::istream& operator>>(std::istream& in, snapshot_data& snap)
+    std::istream& operator>>(std::istream& in, snapshot_data& snap) noexcept
     {
         using common::safe_getline;
         
@@ -231,7 +231,7 @@ namespace snapshot
         return in;
     }
     
-    const snapshot_data& snapshot_data::operator=(const snapshot_data& snap)
+    const snapshot_data& snapshot_data::operator=(const snapshot_data& snap) noexcept
     {
         if(this != &snap)
         {
@@ -246,7 +246,7 @@ namespace snapshot
         return *this;
     }
     
-    bool snapshot_data::operator==(const snapshot_data& snap) const
+    bool snapshot_data::operator==(const snapshot_data& snap) const noexcept
     {
         return (
                 (this->id == snap.id) && 
@@ -255,13 +255,13 @@ namespace snapshot
                 (this->paths == snap.paths));
     }
     
-    bool snapshot_data::operator!=(const snapshot_data& snap) const
+    bool snapshot_data::operator!=(const snapshot_data& snap) const noexcept
     {
         return !(this->operator==(snap));
     }
     
     /** Compares two snapshot's times.  provided for sorting algorithms. */
-    bool snapshot_data::operator<(const snapshot_data& s) const
+    bool snapshot_data::operator<(const snapshot_data& s) const noexcept
     {
         return (this->timestamp < s.timestamp);
     }
@@ -272,7 +272,7 @@ namespace snapshot
 /* take_snapshot member functions: */
 namespace snapshot
 {
-    unsigned long long take_snapshot(const std::string& s)
+    unsigned long long take_snapshot(const std::string& s) noexcept
     {
         take_snapshot_proc_data *pd(new take_snapshot_proc_data);
         unsigned long long id(0);
@@ -304,7 +304,7 @@ namespace snapshot
         return id;
     }
     
-    std::ostream& out_header(std::ostream& out, const snapshot_data& snap)
+    std::ostream& out_header(std::ostream& out, const snapshot_data& snap) noexcept
     {
         char *ch(new char[sizeof(unsigned long long)]);
         
@@ -319,7 +319,7 @@ namespace snapshot
         return out;
     }
     
-    std::istream& in_header(std::istream& in, snapshot_data& snap)
+    std::istream& in_header(std::istream& in, snapshot_data& snap) noexcept
     {
         using common::safe_getline;
         

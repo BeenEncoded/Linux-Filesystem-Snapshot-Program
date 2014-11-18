@@ -11,10 +11,10 @@
 
 namespace
 {
-    bool char_match(const std::string&, const char&);
+    bool char_match(const std::string&, const char&) noexcept;
     
     
-    inline bool char_match(const std::string& s, const char& ch)
+    inline bool char_match(const std::string& s, const char& ch) noexcept
     {
         for(std::string::const_iterator it = s.begin(); it != s.end(); ++it)
         {
@@ -28,12 +28,12 @@ namespace
 
 namespace common
 {
-    void cl()
+    void cl() noexcept
     {
         input::cl();
     }
     
-    void wait()
+    void wait() noexcept
     {
         using std::cout;
         using std::endl;
@@ -45,7 +45,7 @@ namespace common
         input::cl();
     }
     
-    bool kbhit()
+    bool kbhit() noexcept
     {
         return input::kbhit();
     }
@@ -79,7 +79,7 @@ namespace common
         return key;
     }
     
-    void cls()
+    void cls() noexcept
     {
         output::cls();
     }
@@ -90,28 +90,28 @@ namespace common
         return getch_funct();
     }
     
-    bool is_letter(const char& ch)
+    bool is_letter(const char& ch) noexcept
     {
         return char_match(LETTERS, ch);
     }
     
-    bool is_number(const char& ch)
+    bool is_number(const char& ch) noexcept
     {
         return char_match(NUMBERS, ch);
     }
     
-    bool is_special(const char& ch)
+    bool is_special(const char& ch) noexcept
     {
         return char_match(SPECIALS, ch);
     }
     
-    bool is_char(const char& ch)
+    bool is_char(const char& ch) noexcept
     {
         return char_match((NUMBERS + std::string(LETTERS) + SPECIALS), ch);
     }
     
     /*Display a string in the horizontal center of the screen. */
-    void center(const std::string& message)
+    void center(const std::string& message) noexcept
     {
         using std::cout;
         
@@ -169,24 +169,27 @@ namespace common
         else cout<< endl<< endl;
     }
     
-    std::string parent_folder(const std::string& f)
+    std::string parent_folder(const std::string& f) noexcept
     {
         std::string temps(f);
         std::string::size_type pos(temps.rfind(fsys::pref_slash()));
         
-        if(pos != std::string::npos)
+        if(!f.empty())
         {
-            temps.erase((temps.begin() + pos), temps.end());
+            if(pos != std::string::npos)
+            {
+                temps.erase((temps.begin() + pos), temps.end());
+            }
         }
         return temps;
     }
     
-    bool string_begins_with(const std::string& s, const std::string& beg)
+    bool string_begins_with(const std::string& s, const std::string& beg) noexcept
     {
         return (s.find(beg) == 0);
     }
     
-    bool string_ends_with(const std::string& s, const std::string& end)
+    bool string_ends_with(const std::string& s, const std::string& end) noexcept
     {
         return (s.rfind(end) == (s.size() - end.size()));
     }

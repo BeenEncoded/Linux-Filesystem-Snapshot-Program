@@ -10,21 +10,23 @@ namespace snapshot
 {
     struct snapshot_data;
     
-    std::istream& operator>>(std::istream&, snapshot_data&);
-    std::ostream& operator<<(std::ostream&, const snapshot_data&);
+    std::istream& operator>>(std::istream&, snapshot_data&) noexcept;
+    std::ostream& operator<<(std::ostream&, const snapshot_data&) noexcept;
     
-    unsigned long long take_snapshot(const std::string&);
-    std::ostream& out_header(std::ostream&, const snapshot_data&);
-    std::istream& in_header(std::istream&, snapshot_data&);
+    unsigned long long take_snapshot(const std::string&) noexcept;
+    std::ostream& out_header(std::ostream&, const snapshot_data&) noexcept;
+    std::istream& in_header(std::istream&, snapshot_data&) noexcept;
     
     struct snapshot_data
     {
-        const snapshot_data& operator=(const snapshot_data&);
-        bool operator==(const snapshot_data&) const;
-        bool operator!=(const snapshot_data&) const;
-        bool operator<(const snapshot_data&) const;
+        explicit snapshot_data() noexcept {}
+        ~snapshot_data() noexcept {}
         
-        void take_time();
+        const snapshot_data& operator=(const snapshot_data&) noexcept;
+        bool operator==(const snapshot_data&) const noexcept;
+        bool operator!=(const snapshot_data&) const noexcept;
+        bool operator<(const snapshot_data&) const noexcept;
+        
         
         std::string root;
         std::vector<std::string> paths;
