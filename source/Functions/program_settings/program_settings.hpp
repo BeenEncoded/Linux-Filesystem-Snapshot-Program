@@ -1,7 +1,7 @@
 #ifndef PROGRAM_SETTINGS_HPP_INCLUDED
 #define PROGRAM_SETTINGS_HPP_INCLUDED
-#include <regex>
 #include <vector>
+#include <string>
 #include <iostream>
 
 namespace settings
@@ -10,17 +10,21 @@ namespace settings
     typedef struct regex_data regex_data;
     typedef struct regex_settings_data regex_settings_data;
     
+    settings_data load_settings(const std::string&);
     
     std::istream& operator>>(std::istream&, regex_data&);
     std::ostream& operator<<(std::ostream&, const regex_data&);
     
-    std::istream& operator>>(std::istream&, regex_settings_data&) noexcept;
-    std::ostream& operator<<(std::ostream&, const regex_settings_data&) noexcept;
+    std::istream& operator>>(std::istream&, regex_settings_data&);
+    std::ostream& operator<<(std::ostream&, const regex_settings_data&);
+    
+    std::ostream& operator<<(std::ostream&, const settings_data&);
+    std::istream& operator>>(std::istream&, settings_data&);
     
     /* One Regular expression. */
     typedef struct regex_data
     {
-        explicit regex_data() noexcept {}
+        explicit regex_data() noexcept;
         ~regex_data() noexcept {}
         
         regex_data& operator=(const regex_data&) noexcept;
@@ -35,7 +39,7 @@ namespace settings
      * as a bool that specifies whether to use this feature at all. */
     typedef struct regex_settings_data
     {
-        explicit regex_settings_data() noexcept {}
+        explicit regex_settings_data() noexcept;
         ~regex_settings_data() noexcept {}
         
         regex_settings_data& operator=(const regex_settings_data&) noexcept;
@@ -46,10 +50,10 @@ namespace settings
         std::vector<regex_data> match, not_match;
     } regex_settings_data;
     
-    /* cur_pos write operators for settings_data: */
+    /** Program settings */
     typedef struct settings_data
     {
-        explicit settings_data() noexcept {}
+        explicit settings_data() noexcept;
         ~settings_data() noexcept {}
         
         settings_data& operator=(const settings_data&) noexcept;

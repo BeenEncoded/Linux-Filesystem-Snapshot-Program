@@ -16,7 +16,6 @@
 
 /** FILESYSTEM reading constants: */
 
-
 //snapshot folder (snap_):
 #define fsyssnap_SNAPSHOT_FOLDER_NAME "snapshots"
 #define fsyssnap_SNAPSHOT_FILE_EXTENSION ".snap"

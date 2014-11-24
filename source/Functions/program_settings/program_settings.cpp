@@ -3,9 +3,11 @@
 #include <regex>
 #include <iostream>
 #include <cstring>
+#include <fstream>
 
 #include "program_settings.hpp"
 #include "global_defines.hpp"
+#include "filesystem.hpp"
 #include "common.hpp"
 
 namespace
@@ -70,6 +72,11 @@ namespace
 /** regex_data member functions: */
 namespace settings
 {
+    regex_data::regex_data() noexcept : on(true),
+                    s()
+    {
+    }
+    
     regex_data& regex_data::operator=(const regex_data& reg) noexcept
     {
         if(this != &reg)
@@ -126,6 +133,15 @@ namespace settings
 /** regex_settings_data member functions: */
 namespace settings
 {
+    regex_settings_data::regex_settings_data() noexcept : 
+                    use_regex(false),
+                    use_match(true),
+                    use_not_match(true),
+                    match(),
+                    not_match()
+    {
+    }
+    
     regex_settings_data& regex_settings_data::operator=(const regex_settings_data& r) noexcept
     {
         if(this != &r)
@@ -153,7 +169,7 @@ namespace settings
         return !(this->operator==(r));
     }
     
-    std::ostream& operator<<(std::ostream& out, const regex_settings_data& r) noexcept
+    std::ostream& operator<<(std::ostream& out, const regex_settings_data& r)
     {
         if(out.good())
         {
@@ -174,8 +190,9 @@ namespace settings
         return out;
     }
     
-    std::istream& operator>>(std::istream& in, regex_settings_data& r) noexcept
+    std::istream& operator>>(std::istream& in, regex_settings_data& r)
     {
+        r = regex_settings_data();
         if(in.good())
         {
             bool tempb;
@@ -209,6 +226,10 @@ namespace settings
 /** settings_data member functions: */
 namespace settings
 {
+    settings_data::settings_data() noexcept : regex_settings()
+    {
+    }
+    
     settings_data& settings_data::operator=(const settings_data& s) noexcept
     {
         if(this != &s)
@@ -226,6 +247,46 @@ namespace settings
     bool settings_data::operator!=(const settings_data& s) const noexcept
     {
         return (this->regex_settings != s.regex_settings);
+    }
+    
+    std::ostream& operator<<(std::ostream& out, const settings_data& s)
+    {
+        out<< s.regex_settings;
+        return out;
+    }
+    
+    std::istream& operator>>(std::istream& in, settings_data& s)
+    {
+        s = settings_data();
+        in.peek();
+        if(in.good())
+        {
+            in>> s;
+        }
+        return in;
+    }
+    
+    
+}
+
+namespace settings
+{
+    /** Loads program settings from a specified file. */
+    settings_data load_settings(const std::string& s)
+    {
+        using fsys::is_file;
+        
+        std::ifstream in;
+        settings_data program_settings;
+        
+        if(is_file(s).value)
+        {
+            in.open(s.c_str(), std::ios::in);
+            if(in.good()) in>> program_settings;
+            else ethrow("Error, could not open file.  (path: \"" + s + "\"");
+            in.close();
+        }
+        return program_settings;
     }
     
     

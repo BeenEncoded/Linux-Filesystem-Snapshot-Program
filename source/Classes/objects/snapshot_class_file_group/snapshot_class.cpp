@@ -8,7 +8,6 @@
 
 #include "snapshot_class.hpp"
 #include "common.hpp"
-#include "date_class.hpp"
 #include "global_defines.hpp"
 #include "snapshot_file_loaders.hpp"
 #include "filesystem.hpp"

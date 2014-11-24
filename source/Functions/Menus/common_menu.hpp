@@ -2,7 +2,6 @@
 #define MENU_GLOBALS_HPP_INCLUDED
 #include <unordered_set>
 
-
 #include "scroll_display.hpp"
 #include "global_defines.hpp"
 #include "snapshot_class.hpp"
@@ -14,8 +13,8 @@ namespace common_menu
 {
     typedef const_int_type<10> wsize;
     
-    struct menu_return_data;
-    class selection_class;
+    typedef struct menu_return_data menu_return_data;
+    typedef class selection_class selection_class;
     
     void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&);
     void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&,
@@ -27,12 +26,12 @@ namespace common_menu
         
     }
     
-    struct menu_return_data
+    typedef struct menu_return_data
     {
         bool canceled = false, modified = false;
-    };
+    } menu_return_data;
     
-    class selection_class
+    typedef class selection_class
     {
     public:
         explicit selection_class();
@@ -51,7 +50,7 @@ namespace common_menu
     private:
         std::unordered_set<unsigned int> selection;
         
-    };
+    } selection_class;
     
     
 }

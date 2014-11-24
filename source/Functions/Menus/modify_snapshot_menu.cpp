@@ -20,7 +20,7 @@
 
 namespace
 {
-    struct menu_data;
+    typedef struct menu_data menu_data;
     
     void display_help();
     bool remove_snapshot(const menu_data&, const unsigned long long&);
@@ -39,12 +39,12 @@ namespace
     
     /** Data that this menu, and most functions is calls, needs 
      * for a lot of operations.*/
-    struct menu_data
+    typedef struct menu_data
     {
         std::unordered_map<unsigned long long, std::string> ids;
         std::vector<snapshot::snapshot_data> snapshots;
         std::string folder;
-    };
+    } menu_data;
     
     /* Shows basic info on how to use the main snapshot list menu. */
     inline void display_help()
