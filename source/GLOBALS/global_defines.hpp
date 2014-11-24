@@ -10,6 +10,7 @@
 #define SPECIALS "`~!@#$%^&*()-_=+[{]}\\|;:\'\",<.>/? "
 #define GSTRING_CANCEL "oiwydfp980  q30f8p90c9-i130894f=i-=23f=-    0w2g]["
 
+//this should be used to report programming mistakes...  returning errors for things that should never happen.
 #define ethrow(MSG) throw std::runtime_error(std::string(std::string(__FILE__) + \
 "    Exception thrown at line " + std::to_string(__LINE__) + \
 ": " + std::string(MSG)))

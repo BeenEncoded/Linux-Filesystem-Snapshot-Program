@@ -8,7 +8,6 @@
 
 #include "snapshot_class.hpp"
 #include "common.hpp"
-#include "date_class.hpp"
 #include "global_defines.hpp"
 #include "snapshot_file_loaders.hpp"
 #include "filesystem.hpp"
@@ -272,7 +271,7 @@ namespace snapshot
 /* take_snapshot member functions: */
 namespace snapshot
 {
-    unsigned long long take_snapshot(const std::string& s) noexcept
+    unsigned long long take_snapshot(const std::string& s)
     {
         take_snapshot_proc_data *pd(new take_snapshot_proc_data);
         unsigned long long id(0);

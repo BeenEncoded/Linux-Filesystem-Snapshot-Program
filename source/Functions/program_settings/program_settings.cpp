@@ -70,6 +70,12 @@ namespace
 /** regex_data member functions: */
 namespace settings
 {
+    regex_data::regex_data() noexcept : 
+                    on(true),
+                    s()
+    {
+    }
+    
     regex_data& regex_data::operator=(const regex_data& reg) noexcept
     {
         if(this != &reg)
@@ -94,11 +100,8 @@ namespace settings
     
     std::ostream& operator<<(std::ostream& out, const regex_data& r)
     {
-        if(out.good())
-        {
-            out<< r.s<< mem_delim::value;
-            out_memory_of(out, r.on);
-        }
+        out<< r.s<< mem_delim::value;
+        out_memory_of(out, r.on);
         return out;
     }
     
@@ -126,6 +129,15 @@ namespace settings
 /** regex_settings_data member functions: */
 namespace settings
 {
+    regex_settings_data::regex_settings_data() noexcept : 
+                    use_regex(false),
+                    use_match(true),
+                    use_not_match(true),
+                    match(),
+                    not_match()
+    {
+    }
+    
     regex_settings_data& regex_settings_data::operator=(const regex_settings_data& r) noexcept
     {
         if(this != &r)
@@ -153,29 +165,27 @@ namespace settings
         return !(this->operator==(r));
     }
     
-    std::ostream& operator<<(std::ostream& out, const regex_settings_data& r) noexcept
+    std::ostream& operator<<(std::ostream& out, const regex_settings_data& r)
     {
-        if(out.good())
+        out_memory_of(out, r.use_regex);
+        out_memory_of(out, r.use_match);
+        out_memory_of(out, r.use_not_match);
+        for(std::vector<regex_data>::const_iterator it = r.match.begin(); it != r.match.end(); ++it)
         {
-            out_memory_of(out, r.use_regex);
-            out_memory_of(out, r.use_match);
-            out_memory_of(out, r.use_not_match);
-            for(std::vector<regex_data>::const_iterator it = r.match.begin(); it != r.match.end(); ++it)
-            {
-                out<< *it;
-            }
-            out<< struct_delim::value;
-            for(std::vector<regex_data>::const_iterator it = r.not_match.begin(); it != r.not_match.end(); ++it)
-            {
-                out<< *it;
-            }
-            out<< struct_delim::value;
+            out<< *it;
         }
+        out<< struct_delim::value;
+        for(std::vector<regex_data>::const_iterator it = r.not_match.begin(); it != r.not_match.end(); ++it)
+        {
+            out<< *it;
+        }
+        out<< struct_delim::value;
         return out;
     }
     
-    std::istream& operator>>(std::istream& in, regex_settings_data& r) noexcept
+    std::istream& operator>>(std::istream& in, regex_settings_data& r)
     {
+        r = regex_settings_data();
         if(in.good())
         {
             bool tempb;
@@ -209,6 +219,10 @@ namespace settings
 /** settings_data member functions: */
 namespace settings
 {
+    settings_data::settings_data() noexcept : regex_settings()
+    {
+    }
+    
     settings_data& settings_data::operator=(const settings_data& s) noexcept
     {
         if(this != &s)
@@ -226,6 +240,23 @@ namespace settings
     bool settings_data::operator!=(const settings_data& s) const noexcept
     {
         return (this->regex_settings != s.regex_settings);
+    }
+    
+    std::ostream& operator<<(std::ostream& out, const settings_data& s)
+    {
+        out<< s.regex_settings;
+        return out;
+    }
+    
+    std::istream& operator>>(std::istream& in, settings_data& s)
+    {
+        s = settings_data();
+        in.peek();
+        if(in.good())
+        {
+            in>> s.regex_settings;
+        }
+        return in;
     }
     
     
