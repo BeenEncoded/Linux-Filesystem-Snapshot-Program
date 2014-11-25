@@ -47,7 +47,7 @@ typedef const_int_type<8> v_center;
 
 namespace key_code
 {
-    class key_code_data;
+    typedef class key_code_data key_code_data;
     
     extern std::vector<key_code_data> keys;
     
@@ -56,7 +56,7 @@ namespace key_code
     bool is_listed_control(const key_code_data&);
     bool might_be_control(const key_code_data&);
     
-    class key_code_data
+    typedef class key_code_data
     {
     public:
         explicit key_code_data(const std::vector<int>&);
@@ -73,7 +73,7 @@ namespace key_code
         bool is_control : 1;
         
         std::vector<int> control_d;
-    };
+    }key_code_data;
     
     namespace code
     {

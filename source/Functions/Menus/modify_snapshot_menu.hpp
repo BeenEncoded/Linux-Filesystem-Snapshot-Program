@@ -3,10 +3,11 @@
 #include <string>
 
 #include "common_menu.hpp"
+#include "program_settings.hpp"
 
 namespace snapshot_menu
 {
-    common_menu::menu_return_data main_snapshot_menu(const std::string&);
+    common_menu::menu_return_data main_snapshot_menu(const std::string&, settings::settings_data&);
     
 }
 

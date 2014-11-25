@@ -21,7 +21,7 @@ namespace
         settings_data program_settings(load_settings(snapshot_folder() + 
                 fsys::pref_slash() + std::string("program settings.dat")));
         
-        snapshot_menu::main_snapshot_menu(snapshot_folder());
+        snapshot_menu::main_snapshot_menu(snapshot_folder(), program_settings);
     }
     
     

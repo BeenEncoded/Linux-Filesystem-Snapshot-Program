@@ -16,6 +16,7 @@
 #include "common_menu.hpp"
 #include "time_class.hpp"
 #include "filesystem.hpp"
+#include "program_settings.hpp"
 
 
 namespace
@@ -448,7 +449,8 @@ namespace snapshot_menu
     
     /** Shows a menu that allows a user to select from all the saved snapshots, and
      * make modifications.  "folder" is the folder that the snapshots are saved in. */
-    common_menu::menu_return_data main_snapshot_menu(const std::string& folder)
+    common_menu::menu_return_data main_snapshot_menu(const std::string& folder, 
+            settings::settings_data& psettings)
     {
         using namespace common_menu;
         using scrollDisplay::scroll_display_class;
