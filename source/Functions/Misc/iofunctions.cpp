@@ -79,17 +79,14 @@ namespace output
 {
     void cls()
     {
-        char temps[] = "clear";
+        char ch[] = "clear";
         if (!cur_term)
         {
             int result;
             setupterm( NULL, STDOUT_FILENO, &result );
-            if (result <= 0)
-            {
-                return;
-            }
+            if (result <= 0) return;
         }
-        putp( tigetstr( temps ) );
+        putp( tigetstr( ch ) );
     }
     
     

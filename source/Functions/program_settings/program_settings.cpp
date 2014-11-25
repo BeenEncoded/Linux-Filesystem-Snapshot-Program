@@ -72,7 +72,8 @@ namespace
 /** regex_data member functions: */
 namespace settings
 {
-    regex_data::regex_data() noexcept : on(true),
+    regex_data::regex_data() noexcept : 
+                    on(true),
                     s()
     {
     }
@@ -101,11 +102,8 @@ namespace settings
     
     std::ostream& operator<<(std::ostream& out, const regex_data& r)
     {
-        if(out.good())
-        {
-            out<< r.s<< mem_delim::value;
-            out_memory_of(out, r.on);
-        }
+        out<< r.s<< mem_delim::value;
+        out_memory_of(out, r.on);
         return out;
     }
     
@@ -171,22 +169,19 @@ namespace settings
     
     std::ostream& operator<<(std::ostream& out, const regex_settings_data& r)
     {
-        if(out.good())
+        out_memory_of(out, r.use_regex);
+        out_memory_of(out, r.use_match);
+        out_memory_of(out, r.use_not_match);
+        for(std::vector<regex_data>::const_iterator it = r.match.begin(); it != r.match.end(); ++it)
         {
-            out_memory_of(out, r.use_regex);
-            out_memory_of(out, r.use_match);
-            out_memory_of(out, r.use_not_match);
-            for(std::vector<regex_data>::const_iterator it = r.match.begin(); it != r.match.end(); ++it)
-            {
-                out<< *it;
-            }
-            out<< struct_delim::value;
-            for(std::vector<regex_data>::const_iterator it = r.not_match.begin(); it != r.not_match.end(); ++it)
-            {
-                out<< *it;
-            }
-            out<< struct_delim::value;
+            out<< *it;
         }
+        out<< struct_delim::value;
+        for(std::vector<regex_data>::const_iterator it = r.not_match.begin(); it != r.not_match.end(); ++it)
+        {
+            out<< *it;
+        }
+        out<< struct_delim::value;
         return out;
     }
     
@@ -261,32 +256,9 @@ namespace settings
         in.peek();
         if(in.good())
         {
-            in>> s;
+            in>> s.regex_settings;
         }
         return in;
-    }
-    
-    
-}
-
-namespace settings
-{
-    /** Loads program settings from a specified file. */
-    settings_data load_settings(const std::string& s)
-    {
-        using fsys::is_file;
-        
-        std::ifstream in;
-        settings_data program_settings;
-        
-        if(is_file(s).value)
-        {
-            in.open(s.c_str(), std::ios::in);
-            if(in.good()) in>> program_settings;
-            else ethrow("Error, could not open file.  (path: \"" + s + "\"");
-            in.close();
-        }
-        return program_settings;
     }
     
     

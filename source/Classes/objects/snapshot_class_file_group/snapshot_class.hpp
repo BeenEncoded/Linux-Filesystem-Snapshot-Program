@@ -13,7 +13,7 @@ namespace snapshot
     std::istream& operator>>(std::istream&, snapshot_data&) noexcept;
     std::ostream& operator<<(std::ostream&, const snapshot_data&) noexcept;
     
-    unsigned long long take_snapshot(const std::string&) noexcept;
+    unsigned long long take_snapshot(const std::string&);
     std::ostream& out_header(std::ostream&, const snapshot_data&) noexcept;
     std::istream& in_header(std::istream&, snapshot_data&) noexcept;
     

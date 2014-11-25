@@ -271,7 +271,7 @@ namespace snapshot
 /* take_snapshot member functions: */
 namespace snapshot
 {
-    unsigned long long take_snapshot(const std::string& s) noexcept
+    unsigned long long take_snapshot(const std::string& s)
     {
         take_snapshot_proc_data *pd(new take_snapshot_proc_data);
         unsigned long long id(0);

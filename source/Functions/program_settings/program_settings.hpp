@@ -50,7 +50,7 @@ namespace settings
         std::vector<regex_data> match, not_match;
     } regex_settings_data;
     
-    /** Program settings */
+    /** General program settings. */
     typedef struct settings_data
     {
         explicit settings_data() noexcept;
