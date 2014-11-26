@@ -611,7 +611,16 @@ delete the snapshot taken on " + display_time(data.snapshots.at(window.gpos().wh
                         
                         case 's':
                         {
-                            if(menu::modify_program_settings(psettings).modified) result.modified = true;
+                            common_menu::menu_return_data tempres(
+                                    menu::modify_program_settings(psettings));
+                            if(tempres.modified)
+                            {
+                                result.modified = true;
+                                if(!tempres.canceled)
+                                {
+                                    //todo save settings
+                                }
+                            }
                         }
                         break;
                         

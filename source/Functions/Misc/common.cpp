@@ -81,10 +81,10 @@ namespace common
     
     void cls() noexcept
     {
-        char esc(0x1b);
-        //output::cls();
-        std::cout<< esc<< "[50F";
-        std::cout<< esc<< "[J";
+        std::cout.flush();
+        //I decided to use an escape sequence instead of the termios api.
+        char ch[] = {(char)0x1b, '[', '1', ';', '1', 'H', (char)0x1b, '[', '2', 'J', (char)0x1b, '[', '2', 'K'};
+        std::cout<< ch;
     }
     
     key_code::key_code_data gkey_funct()

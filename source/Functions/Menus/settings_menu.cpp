@@ -178,7 +178,7 @@ namespace menu
             cout<< " [BCKSPCE] -  Done"<< endl;
             
             key = common::gkey_funct();
-            if(!key.is_control)
+            if(!key_code::is_listed_control(key))
             {
                 if(!key.control_d.empty())
                 {
@@ -241,15 +241,13 @@ namespace menu
                     }
                 }
             }
-            else if(key.is_control)
+            else
             {
-                if(!key_code::is_listed_control(key) && 
-                        (key.control_d.size() == 1))
+                using namespace key_code::code;
+                using key_code::keys;
+                if(key == keys[backspace::value])
                 {
-                    if(key.control_d[0] == key_code::keys[key_code::code::backspace::value].control_d.front())
-                    {
-                        finished = true;
-                    }
+                    finished = true;
                 }
             }
         }while(!finished);
@@ -324,6 +322,10 @@ namespace menu
                 }
             }
         }while(!finished);
+        if(result.modified && !result.canceled)
+        {
+            cur_settings = settings;
+        }
         return result;
     }
     

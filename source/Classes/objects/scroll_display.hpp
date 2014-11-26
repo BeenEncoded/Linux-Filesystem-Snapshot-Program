@@ -10,8 +10,11 @@
 namespace scrollDisplay
 {
     typedef class scroll_display_class scroll_display_class;
+    typedef struct window_data window_data;
+    typedef struct position_data position_data;
     
-    struct window_data
+    
+    typedef struct window_data
     {
         void operator=(const window_data& wd)
         {
@@ -23,9 +26,9 @@ namespace scrollDisplay
         }
         
         signed long size = 15, beg = 0;
-    };
+    } window_data;
     
-    struct position_data
+    typedef struct position_data
     {
         void operator=(const position_data& pd)
         {
@@ -38,7 +41,7 @@ namespace scrollDisplay
         
         short part = 0;
         unsigned int whole = 0;
-    };
+    } position_data;
     
     /* scroll_display_class: a class designed to manage a window and make 
      * it easy to create a scroll display.*/
@@ -191,6 +194,7 @@ namespace scrollDisplay
         
     };
     
+    //explitic instantiations for window_data_class go here:
     template class window_data_class<settings::regex_data>;
     
 }
