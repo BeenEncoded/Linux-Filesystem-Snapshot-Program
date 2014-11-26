@@ -102,6 +102,7 @@ namespace settings
     
     std::ostream& operator<<(std::ostream& out, const regex_data& r)
     {
+        //test
         out<< r.s<< mem_delim::value;
         out_memory_of(out, r.on);
         return out;
@@ -109,6 +110,7 @@ namespace settings
     
     std::istream& operator>>(std::istream& in, regex_data& r)
     {
+        //test
         r = regex_data();
         
         in.peek();
@@ -169,6 +171,7 @@ namespace settings
     
     std::ostream& operator<<(std::ostream& out, const regex_settings_data& r)
     {
+        //test
         out_memory_of(out, r.use_regex);
         out_memory_of(out, r.use_match);
         out_memory_of(out, r.use_not_match);
@@ -187,6 +190,7 @@ namespace settings
     
     std::istream& operator>>(std::istream& in, regex_settings_data& r)
     {
+        //test
         r = regex_settings_data();
         if(in.good())
         {
@@ -246,12 +250,14 @@ namespace settings
     
     std::ostream& operator<<(std::ostream& out, const settings_data& s)
     {
+        //test
         out<< s.regex_settings;
         return out;
     }
     
     std::istream& operator>>(std::istream& in, settings_data& s)
     {
+        //test
         s = settings_data();
         in.peek();
         if(in.good())

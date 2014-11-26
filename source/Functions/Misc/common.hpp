@@ -89,7 +89,6 @@ namespace common
     bool is_char(const char&) noexcept;
     void center(const std::string&) noexcept;
     struct tm get_time();
-    void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&);
     std::string parent_folder(const std::string&) noexcept;
     bool string_begins_with(const std::string&, const std::string&) noexcept;
     bool string_ends_with(const std::string&, const std::string&) noexcept;

@@ -14,8 +14,8 @@ namespace key_code
 {
     
     std::vector<key_code_data> keys({
-        key_code_data(DEL), //backspace
-        key_code_data(ESC),  //escape
+        key_code_data((char)8), //backspace
+        key_code_data((char)27),  //escape
         key_code_data(std::vector<int>({27, 91, 51, 126})), //delete
         key_code_data(std::vector<int>({27, 91, 50, 126})), //insert
         key_code_data(std::vector<int>({27, 79, 70})),      //end

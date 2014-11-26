@@ -81,7 +81,10 @@ namespace common
     
     void cls() noexcept
     {
-        output::cls();
+        char esc(0x1b);
+        //output::cls();
+        std::cout<< esc<< "[50F";
+        std::cout<< esc<< "[J";
     }
     
     key_code::key_code_data gkey_funct()
@@ -128,45 +131,6 @@ namespace common
         time(&rawtime);
         temptime = (*(localtime(&rawtime)));
         return temptime;
-    }
-    
-    void display_scroll_window(scrollDisplay::scroll_display_class& win, const unsigned int& whole_size)
-    {
-        using std::cout;
-        using std::endl;
-        
-        output::cls();
-        
-        std::vector<std::string> tempv(win.window());
-        unsigned int size(tempv.size());
-        
-        if(win.window_beg() > 0)
-        {
-            common::center("^^ " + std::to_string(win.window_beg()) + " ^^");
-            cout<< endl;
-            cout<< std::string(70, '^')<< endl;
-        }
-        else cout<< endl<< endl;
-        
-        for(int x = 0; x < (signed)size; x++)
-        {
-            if(win.gpos().part == x) cout<< " [";
-            else cout<< "  ";
-            
-            cout<< tempv[win.gpos().part];
-            
-            if(win.gpos().part == x) cout<< "]";
-            
-            cout<< endl;
-        }
-        
-        if((whole_size - (win.window_beg() + win.window_size())) > 0)
-        {
-            cout<< std::string(70, 'v')<< endl;
-            common::center(std::to_string((whole_size - (win.window_beg() + win.window_size()))));
-            cout<< endl;
-        }
-        else cout<< endl<< endl;
     }
     
     std::string parent_folder(const std::string& f) noexcept

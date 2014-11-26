@@ -12,7 +12,6 @@
 namespace
 {
     void main_menu();
-    settings::settings_data load_settings(const std::string&);
     
     
 

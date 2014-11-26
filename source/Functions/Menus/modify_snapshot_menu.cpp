@@ -17,6 +17,7 @@
 #include "time_class.hpp"
 #include "filesystem.hpp"
 #include "program_settings.hpp"
+#include "settings_menu.hpp"
 
 
 namespace
@@ -454,7 +455,7 @@ namespace snapshot_menu
     {
         using namespace common_menu;
         using scrollDisplay::scroll_display_class;
-        using common::display_scroll_window;
+        using common_menu::display_scroll_window;
         using key_code::key_code_data;
         using std::cout;
         using std::endl;
@@ -499,6 +500,7 @@ namespace snapshot_menu
             cout<< " [SPC] -  Select"<< endl;
             cout<< " n -  NEW snapshot"<< endl;
             cout<< " c -  Compare snaps"<< endl;
+            cout<< " s -  Settings"<< endl;
             cout<< " \\ -  clear selection"<< endl;
             cout<< " e -  Exit";
             cout.flush();
@@ -604,6 +606,12 @@ delete the snapshot taken on " + display_time(data.snapshots.at(window.gpos().wh
                                 diff_snapshots(data, data.snapshots.at(selection[0]), data.snapshots.at(selection[1]));
                                 selection.clear();
                             }
+                        }
+                        break;
+                        
+                        case 's':
+                        {
+                            if(menu::modify_program_settings(psettings).modified) result.modified = true;
                         }
                         break;
                         

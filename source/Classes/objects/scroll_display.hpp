@@ -5,10 +5,11 @@
 #include <assert.h>
 
 #include "global_defines.hpp"
+#include "program_settings.hpp"
 
 namespace scrollDisplay
 {
-    class scroll_display_class;
+    typedef class scroll_display_class scroll_display_class;
     
     struct window_data
     {
@@ -41,7 +42,7 @@ namespace scrollDisplay
     
     /* scroll_display_class: a class designed to manage a window and make 
      * it easy to create a scroll display.*/
-    class scroll_display_class
+    typedef class scroll_display_class
     {
     public:
         explicit scroll_display_class() : display(NULL), 
@@ -52,7 +53,10 @@ namespace scrollDisplay
                     wind(),
                     pos()
         {
-            assert(&d != NULL);
+            if(&d == NULL)
+            {
+                ethrow("Can not initialize scroll display with null pointer!");
+            }
         }
         
         ~scroll_display_class(){}
@@ -156,9 +160,40 @@ namespace scrollDisplay
         }
         
         
+    } scroll_display_class;
+    
+    /** An abstraction of the scroll display class meant to
+     * associate a list of arbitray elements with the window. */
+    template<class type>
+    class window_data_class
+    {
+    public:
+        explicit window_data_class();
+        explicit window_data_class(std::vector<type>&, 
+                void (*)(const std::vector<type>&, std::vector<std::string>&));
+        ~window_data_class();
+        
+        window_data_class<type>& operator=(const window_data_class<type>&);
+        bool operator==(const window_data_class<type>& w) const noexcept;
+        bool operator!=(const window_data_class<type>& w) const noexcept;
+        
+        void remove_selected();
+        type& selected();
+        scroll_display_class& win();
+        
+    private:
+        void update();
+    
+        std::vector<type> *data;
+        void (*update_display)(const std::vector<type>&, std::vector<std::string>&);
+        std::vector<std::string> display;
+        scroll_display_class window;
+        
     };
     
+    template class window_data_class<settings::regex_data>;
     
 }
+
 
 #endif
