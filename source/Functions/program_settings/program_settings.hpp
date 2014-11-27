@@ -10,8 +10,6 @@ namespace settings
     typedef struct regex_data regex_data;
     typedef struct regex_settings_data regex_settings_data;
     
-    settings_data load_settings(const std::string&);
-    
     std::istream& operator>>(std::istream&, regex_data&);
     std::ostream& operator<<(std::ostream&, const regex_data&);
     

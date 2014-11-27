@@ -8,7 +8,7 @@
 #include "common_menu.hpp"
 #include "common.hpp"
 #include "snapshot_class.hpp"
-#include "snapshot_file_loaders.hpp"
+#include "snapshot_file_loader.hpp"
 #include "filesystem.hpp"
 
 using std::cout;

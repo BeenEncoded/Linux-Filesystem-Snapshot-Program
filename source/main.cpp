@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 
-#include "snapshot_file_loaders.hpp"
+#include "snapshot_file_loader.hpp"
 #include "global_defines.hpp"
 #include "modify_snapshot_menu.hpp"
 #include "filesystem.hpp"
@@ -18,11 +18,9 @@ namespace
     inline void main_menu()
     {
         using settings::settings_data;
-        using settings::load_settings;
         using snapshot::snapshot_folder;
         
-        settings_data program_settings(load_settings(snapshot_folder() + 
-                fsys::pref_slash() + std::string("program settings.dat")));
+        settings_data program_settings;
         
         snapshot_menu::main_snapshot_menu(snapshot_folder(), program_settings);
     }

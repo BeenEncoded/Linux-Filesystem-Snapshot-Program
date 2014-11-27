@@ -12,7 +12,7 @@
 #include "common.hpp"
 #include "global_defines.hpp"
 #include "snapshot_class.hpp"
-#include "snapshot_file_loaders.hpp"
+#include "snapshot_file_loader.hpp"
 #include "common_menu.hpp"
 #include "time_class.hpp"
 #include "filesystem.hpp"
