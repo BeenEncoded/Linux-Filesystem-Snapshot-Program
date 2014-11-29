@@ -2,7 +2,7 @@
 #include <string>
 #include <fstream>
 
-#include "snapshot_file_loaders.hpp"
+#include "snapshot_file_loader.hpp"
 #include "filesystem.hpp"
 #include "global_defines.hpp"
 #include "common.hpp"

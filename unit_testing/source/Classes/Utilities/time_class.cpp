@@ -155,7 +155,7 @@ namespace tdata
         return this->cur_time;
     }
     
-    const time_class& time_class::operator=(const time_class& t)
+    time_class& time_class::operator=(const time_class& t)
     {
         if(this != &t)
         {
@@ -164,7 +164,7 @@ namespace tdata
         return *this;
     }
     
-    const time_class& time_class::operator=(const struct tm& t)
+    time_class& time_class::operator=(const struct tm& t)
     {
         if(&(this->cur_time) != (&t))
         {
@@ -230,7 +230,7 @@ namespace tdata
     
     bool time_class::operator>(const time_class& t) const
     {
-        return (this->operator!=(t) && !(this->operator<(t)));
+        return !this->operator<=(t);
     }
     
     bool time_class::operator>=(const time_class& t) const
@@ -239,7 +239,7 @@ namespace tdata
     }
     
     /** Adds 1 second to the time. */
-    const time_class& time_class::operator++(int t __attribute__((unused)))
+    const time_class& time_class::operator++()
     {
         this->cur_time.tm_sec++;
         if(this->cur_time.tm_sec > 59)
@@ -275,8 +275,8 @@ namespace tdata
             i %= day::value;
         }
         
-        if(i < 0) for(int x = 0; x < (i * (-1)); x++) tempt--;
-        else if(i > 0) for(int x = 0; x < i; x++) tempt++;
+        if(i < 0) for(int x = 0; x < (i * (-1)); x++) --tempt;
+        else if(i > 0) for(int x = 0; x < i; x++) ++tempt;
         return tempt;
     }
     
@@ -286,7 +286,7 @@ namespace tdata
         return *this;
     }
     
-    const time_class& time_class::operator--(int t __attribute__((unused)))
+    const time_class& time_class::operator--()
     {
         if(this->cur_time.tm_sec == 0)
         {
@@ -322,8 +322,8 @@ namespace tdata
             i %= day::value;
         }
         
-        if(i < 0) for(int x = 0; x < (i * (-1)); x++) tempt++;
-        else if(i > 0) for(int x = 0; x < i; x++) tempt--;
+        if(i < 0) for(int x = 0; x < (i * (-1)); x++) ++tempt;
+        else if(i > 0) for(int x = 0; x < i; x++) --tempt;
         return tempt;
     }
     

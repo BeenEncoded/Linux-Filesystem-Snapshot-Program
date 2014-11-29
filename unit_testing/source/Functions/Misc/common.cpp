@@ -7,13 +7,14 @@
 #include "global_defines.hpp"
 #include "common.hpp"
 #include "scroll_display.hpp"
+#include "filesystem.hpp"
 
 namespace
 {
-    bool char_match(const std::string&, const char&);
+    bool char_match(const std::string&, const char&) noexcept;
     
     
-    inline bool char_match(const std::string& s, const char& ch)
+    inline bool char_match(const std::string& s, const char& ch) noexcept
     {
         for(std::string::const_iterator it = s.begin(); it != s.end(); ++it)
         {
@@ -27,12 +28,12 @@ namespace
 
 namespace common
 {
-    void cl()
+    void cl() noexcept
     {
         input::cl();
     }
     
-    void wait()
+    void wait() noexcept
     {
         using std::cout;
         using std::endl;
@@ -44,7 +45,7 @@ namespace common
         input::cl();
     }
     
-    bool kbhit()
+    bool kbhit() noexcept
     {
         return input::kbhit();
     }
@@ -58,29 +59,32 @@ namespace common
     key_code::key_code_data getch_funct()
     {
         using key_code::key_code_data;
+        using key_code::is_listed_control;
+        using key_code::might_be_control;
         
+        //initialize a complex key code: we need to be ready for anything: 
         key_code_data key;
-        char ch;
         
+        key.is_control = true;
         do
         {
-            key.control().push_back((int)input::getch().ch());
-        }while(key_code::might_be_control(key) && input::kbhit() && 
-                !key_code::is_listed_control(key));
+            key.control_d.push_back(input::getch().control_d.front());
+        }while(might_be_control(key) && input::kbhit() && !is_listed_control(key));
         
-        if(!key_code::might_be_control(key) && (key.control().size() > 0) && 
-                !key_code::is_listed_control(key))
+        if(!might_be_control(key) && !key.control_d.empty() && !is_listed_control(key))
         {
-            ch = key.control()[0];
-            key.ch() = ch;
+            if(key.control_d.size() == 1) key = key_code_data((char)key.control_d.front());
         }
         
         return key;
     }
     
-    void cls()
+    void cls() noexcept
     {
-        output::cls();
+        std::cout.flush();
+        //I decided to use an escape sequence instead of the termios api.
+        char ch[] = {(char)0x1b, '[', '1', ';', '1', 'H', (char)0x1b, '[', '2', 'J', (char)0x1b, '[', '2', 'K'};
+        std::cout<< ch;
     }
     
     key_code::key_code_data gkey_funct()
@@ -89,28 +93,28 @@ namespace common
         return getch_funct();
     }
     
-    bool is_letter(const char& ch)
+    bool is_letter(const char& ch) noexcept
     {
         return char_match(LETTERS, ch);
     }
     
-    bool is_number(const char& ch)
+    bool is_number(const char& ch) noexcept
     {
         return char_match(NUMBERS, ch);
     }
     
-    bool is_special(const char& ch)
+    bool is_special(const char& ch) noexcept
     {
         return char_match(SPECIALS, ch);
     }
     
-    bool is_char(const char& ch)
+    bool is_char(const char& ch) noexcept
     {
         return char_match((NUMBERS + std::string(LETTERS) + SPECIALS), ch);
     }
     
     /*Display a string in the horizontal center of the screen. */
-    void center(const std::string& message)
+    void center(const std::string& message) noexcept
     {
         using std::cout;
         
@@ -129,43 +133,29 @@ namespace common
         return temptime;
     }
     
-    void display_scroll_window(scrollDisplay::scroll_display_class& win, const unsigned int& whole_size)
+    std::string parent_folder(const std::string& f) noexcept
     {
-        using std::cout;
-        using std::endl;
+        std::string temps(f);
+        std::string::size_type pos(temps.rfind(fsys::pref_slash()));
         
-        output::cls();
-        
-        std::vector<std::string> tempv(win.window());
-        unsigned int size(tempv.size());
-        
-        if(win.window_beg() > 0)
+        if(!f.empty())
         {
-            common::center("^^ " + std::to_string(win.window_beg()) + " ^^");
-            cout<< endl;
-            cout<< std::string(70, '^')<< endl;
+            if(pos != std::string::npos)
+            {
+                temps.erase((temps.begin() + pos), temps.end());
+            }
         }
-        else cout<< endl<< endl;
-        
-        for(int x = 0; x < (signed)size; x++)
-        {
-            if(win.gpos().part == x) cout<< " [";
-            else cout<< "  ";
-            
-            cout<< tempv[win.gpos().part];
-            
-            if(win.gpos().part == x) cout<< "]";
-            
-            cout<< endl;
-        }
-        
-        if((whole_size - (win.window_beg() + win.window_size())) > 0)
-        {
-            cout<< std::string(70, 'v')<< endl;
-            common::center(std::to_string((whole_size - (win.window_beg() + win.window_size()))));
-            cout<< endl;
-        }
-        else cout<< endl<< endl;
+        return temps;
+    }
+    
+    bool string_begins_with(const std::string& s, const std::string& beg) noexcept
+    {
+        return (s.find(beg) == 0);
+    }
+    
+    bool string_ends_with(const std::string& s, const std::string& end) noexcept
+    {
+        return (s.rfind(end) == (s.size() - end.size()));
     }
     
     namespace inp
@@ -189,28 +179,31 @@ namespace common
                 center("Y/N");
                 
                 ch = common::gkey();
-                if(is_char(ch.ch()))
+                if(!ch.control_d.empty() && !ch.is_control)
                 {
-                    switch(tolower(ch.ch()))
+                    if(is_char((char)ch.control_d.front()))
                     {
-                        case 'y':
+                        switch(tolower((char)ch.control_d.front()))
                         {
-                            finished = true;
-                            sure = true;
+                            case 'y':
+                            {
+                                finished = true;
+                                sure = true;
+                            }
+                            break;
+                            
+                            case 'n':
+                            {
+                                finished = true;
+                                sure = false;
+                            }
+                            break;
+                            
+                            default:
+                            {
+                            }
+                            break;
                         }
-                        break;
-                        
-                        case 'n':
-                        {
-                            finished = true;
-                            sure = false;
-                        }
-                        break;
-                        
-                        default:
-                        {
-                        }
-                        break;
                     }
                 }
             }while(!finished);
@@ -242,27 +235,28 @@ namespace common
                 key = getch_funct();
                 if(is_listed_control(key))
                 {
-                    if(key == keys[code::backspace::value])
+                    using namespace key_code::code;
+                    if(key == keys[backspace::value])
                     {
                         if(input.size() > 0) input.resize((input.size() - 1));
                     }
-                    else if(key == keys[code::end::value])
+                    else if(key == keys[end::value])
                     {
                         input = GSTRING_CANCEL;
                         finished = true;
                     }
-                    else if(key == keys[code::del::value])
+                    else if(key == keys[del::value])
                     {
                         if(!input.empty()) input.erase();
                     }
                 }
                 else
                 {
-                    if(!key.is_control)
+                    if(!key.is_control && !key.control_d.empty())
                     {
-                        if(is_char(key.ch()))
+                        if(is_char((char)key.control_d.front()))
                         {
-                            input += key.ch();
+                            input += (char)key.control_d.front();
                         }
                         else
                         {

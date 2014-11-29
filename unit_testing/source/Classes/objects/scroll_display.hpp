@@ -5,12 +5,16 @@
 #include <assert.h>
 
 #include "global_defines.hpp"
+#include "program_settings.hpp"
 
 namespace scrollDisplay
 {
-    class scroll_display_class;
+    typedef class scroll_display_class scroll_display_class;
+    typedef struct window_data window_data;
+    typedef struct position_data position_data;
     
-    struct window_data
+    
+    typedef struct window_data
     {
         void operator=(const window_data& wd)
         {
@@ -22,9 +26,9 @@ namespace scrollDisplay
         }
         
         signed long size = 15, beg = 0;
-    };
+    } window_data;
     
-    struct position_data
+    typedef struct position_data
     {
         void operator=(const position_data& pd)
         {
@@ -37,11 +41,11 @@ namespace scrollDisplay
         
         short part = 0;
         unsigned int whole = 0;
-    };
+    } position_data;
     
     /* scroll_display_class: a class designed to manage a window and make 
      * it easy to create a scroll display.*/
-    class scroll_display_class
+    typedef class scroll_display_class
     {
     public:
         explicit scroll_display_class() : display(NULL), 
@@ -52,7 +56,10 @@ namespace scrollDisplay
                     wind(),
                     pos()
         {
-            assert(&d != NULL);
+            if(&d == NULL)
+            {
+                ethrow("Can not initialize scroll display with null pointer!");
+            }
         }
         
         ~scroll_display_class(){}
@@ -156,9 +163,41 @@ namespace scrollDisplay
         }
         
         
+    } scroll_display_class;
+    
+    /** An abstraction of the scroll display class meant to
+     * associate a list of arbitray elements with the window. */
+    template<class type>
+    class window_data_class
+    {
+    public:
+        explicit window_data_class();
+        explicit window_data_class(std::vector<type>&, 
+                void (*)(const std::vector<type>&, std::vector<std::string>&));
+        ~window_data_class();
+        
+        window_data_class<type>& operator=(const window_data_class<type>&);
+        bool operator==(const window_data_class<type>& w) const noexcept;
+        bool operator!=(const window_data_class<type>& w) const noexcept;
+        
+        void remove_selected();
+        type& selected();
+        scroll_display_class& win();
+        
+    private:
+        void update();
+    
+        std::vector<type> *data;
+        void (*update_display)(const std::vector<type>&, std::vector<std::string>&);
+        std::vector<std::string> display;
+        scroll_display_class window;
+        
     };
     
+    //explitic instantiations for window_data_class go here:
+    template class window_data_class<settings::regex_data>;
     
 }
+
 
 #endif

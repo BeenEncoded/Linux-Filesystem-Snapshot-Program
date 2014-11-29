@@ -8,7 +8,7 @@
 #include "common_menu.hpp"
 #include "common.hpp"
 #include "snapshot_class.hpp"
-#include "snapshot_file_loaders.hpp"
+#include "snapshot_file_loader.hpp"
 #include "filesystem.hpp"
 
 using std::cout;
@@ -16,20 +16,24 @@ using std::endl;
 
 namespace
 {
-    void display_element(const std::string&, const bool&);
+    void display_element(const std::string&, const bool&, const bool&);
     void display_top_border(scrollDisplay::scroll_display_class&);
     void display_bottom_border(scrollDisplay::scroll_display_class&, const unsigned int&);
     void display_multiselect_element(const std::string&, const bool&, const bool&);
     
     
-    inline void display_element(const std::string& s, const bool& selected)
+    inline void display_element(const std::string& s, const bool& selected, 
+                    const bool& special_selected)
     {
+        cout<< (special_selected ? ">" : " ");
+        
         if(selected) cout<< "[";
         else cout<< " ";
         
         cout<< s;
         
         if(selected) cout<< "]";
+        if(special_selected) cout<< "<";
     }
     
     inline void display_multiselect_element(const std::string& s, const bool& selected, const bool& multiselected)
@@ -129,14 +133,30 @@ namespace common_menu
 
 namespace common_menu
 {
-    void display_scroll_window(scrollDisplay::scroll_display_class& win, const unsigned int& total_size)
+    void display_scroll_window(scrollDisplay::scroll_display_class& win, 
+                    const unsigned int& total_size)
     {
         std::vector<std::string> disp(win.window());
         
         display_top_border(win);
         for(short x = 0; x < (short)disp.size(); x++)
         {
-            display_element(disp[x], (x == win.gpos().part));
+            display_element(disp[x], (x == win.gpos().part), false);
+            cout<< endl;
+        }
+        display_bottom_border(win, total_size);
+    }
+    
+    void display_scroll_window(scrollDisplay::scroll_display_class& win, 
+                    const unsigned int& total_size,
+                    const selection_class& selection)
+    {
+        std::vector<std::string> disp(win.window());
+        
+        display_top_border(win);
+        for(short x = 0; x < (short)disp.size(); x++)
+        {
+            display_element(disp[x], (x == win.gpos().part), selection.is_selected(win.window_beg() + x));
             cout<< endl;
         }
         display_bottom_border(win, total_size);
@@ -153,6 +173,23 @@ namespace common_menu
     selection_class::~selection_class()
     {
         this->selection.clear();
+    }
+    
+    const unsigned int& selection_class::operator[](int x) const
+    {
+        int tempi(0);
+        if(!this->selection.empty())
+        {
+            for(std::unordered_set<unsigned int>::const_iterator it = this->selection.begin(); 
+                            it != this->selection.end(); 
+                            ++it)
+            {
+                if(tempi == x) return *it;
+                tempi++;
+            }
+        }
+        throw std::out_of_range("line: " + std::to_string(__LINE__) + ": const unsigned int& \
+selection_class::operator[](int x) const: Error: Must be within bounds of the selection!");
     }
     
     const selection_class& selection_class::operator=(const selection_class& s)
@@ -180,10 +217,14 @@ namespace common_menu
         return (this->selection.erase(x) > 0);
     }
     
-    /* returns the number of selected elements.*/
-    unsigned int selection_class::count() const
+    const std::unordered_set<unsigned int>& selection_class::gselection() const
     {
-        return this->selection.size();
+        return this->selection;
+    }
+    
+    void selection_class::clear()
+    {
+        this->selection.clear();
     }
     
     

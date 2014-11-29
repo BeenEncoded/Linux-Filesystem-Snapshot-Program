@@ -1,8 +1,10 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <assert.h>
 
 #include "scroll_display.hpp"
+#include "global_defines.hpp"
 
 namespace
 {
@@ -277,6 +279,99 @@ namespace scrollDisplay
     {
         this->sync();
         return this->pos;
+    }
+    
+    
+}
+
+namespace scrollDisplay
+{
+    template<class type>
+    window_data_class<type>::window_data_class() : data(NULL), 
+            update_display(NULL),
+            display(),
+            window(display)
+    {
+    }
+    
+    template<class type>
+    window_data_class<type>::window_data_class(std::vector<type>& d, 
+            void (*conv)(const std::vector<type>&, std::vector<std::string>&)) : 
+            data(&d),
+            update_display(conv),
+            display(),
+            window(display)
+    {
+        if(data == nullptr) ethrow("You can not initialize window_data_class with null data!");
+        this->update();
+    }
+    
+    template<class type>
+    window_data_class<type>::~window_data_class()
+    {
+    }
+    
+    template<class type>
+    window_data_class<type>& window_data_class<type>::operator=(const window_data_class<type>& w)
+    {
+        if(this != &w)
+        {
+            this->display.clear();
+            this->data = w.data;
+            this->update_display = w.update_display;
+            this->window = w.window;
+            this->display = w.display;
+        }
+        return *this;
+    }
+    
+    template<class type>
+    bool window_data_class<type>::operator==(const window_data_class<type>& w) const noexcept
+    {
+        return ((this->data == w.data) && 
+                (this->display == w.display) && 
+                (this->update_display == w.update_display));
+    }
+    
+    template<class type>
+    bool window_data_class<type>::operator!=(const window_data_class<type>& w) const noexcept
+    {
+        return !(this->operator==(w));
+    }
+    
+    template<class type>
+    void window_data_class<type>::remove_selected()
+    {
+        if(!this->data->empty())
+        {
+            this->data->erase(this->data->begin() + this->window.gpos().whole);
+            this->update();
+        }
+    }
+    
+    template<class type>
+    type& window_data_class<type>::selected()
+    {
+        if(this->data == nullptr) ethrow("Invalid reference to null pointer.");
+        this->update();
+        return (*(this->data))[this->window.gpos().whole];
+    }
+    
+    template<class type>
+    scroll_display_class& window_data_class<type>::win()
+    {
+        this->update();
+        return this->window;
+    }
+    
+    template<class type>
+    void window_data_class<type>::update()
+    {
+        if(this->data == nullptr)
+        {
+            ethrow("Can not update window_data_class with null data!");
+        }
+        this->update_display(*(this->data), this->display);
     }
     
     
