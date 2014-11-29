@@ -66,6 +66,7 @@ namespace common
                     /* So, here we are: we didn't reach the end of the file, 
                      but somwhere there was a big mistake... the program will
                      now attempt to salvage the situation: */
+                    in.seekg(0, std::ios::beg);
                     in.seekg(previous_position);
                     success = false;
                 }

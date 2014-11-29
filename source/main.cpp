@@ -6,7 +6,7 @@
 #include "global_defines.hpp"
 #include "modify_snapshot_menu.hpp"
 #include "filesystem.hpp"
-#include "program_settings.hpp"
+#include "settings_loader.hpp"
 
 
 namespace
@@ -19,9 +19,9 @@ namespace
     {
         using settings::settings_data;
         using snapshot::snapshot_folder;
+        using common_menu::menu_return_data;
         
-        settings_data program_settings;
-        
+        settings_data program_settings(settings::load(snapshot_folder()));
         snapshot_menu::main_snapshot_menu(snapshot_folder(), program_settings);
     }
     

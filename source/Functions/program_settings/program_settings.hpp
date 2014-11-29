@@ -2,6 +2,7 @@
 #define PROGRAM_SETTINGS_HPP_INCLUDED
 #include <vector>
 #include <string>
+#include <utility>
 #include <iostream>
 
 namespace settings
@@ -18,6 +19,8 @@ namespace settings
     
     std::ostream& operator<<(std::ostream&, const settings_data&);
     std::istream& operator>>(std::istream&, settings_data&);
+    
+    std::pair<std::vector<regex_data>, std::vector<regex_data> > used_expressions(const settings_data&);
     
     /* One Regular expression. */
     typedef struct regex_data

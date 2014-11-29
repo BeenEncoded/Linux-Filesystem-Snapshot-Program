@@ -3,6 +3,7 @@
 #include <regex>
 #include <iostream>
 #include <cstring>
+#include <utility>
 #include <fstream>
 
 #include "program_settings.hpp"
@@ -12,10 +13,13 @@
 
 namespace
 {
+    std::vector<settings::regex_data> apply_filter(const std::vector<settings::regex_data>&);
+    unsigned int available(std::istream&);
     
     
+    //converts type into memory
     template<typename type>
-    char* get_mem(type& t) noexcept
+    char* get_mem(type& t)
     {
         char* ch = new char[sizeof(type)];
         std::memcpy(ch, &t, sizeof(type));
@@ -29,8 +33,9 @@ namespace
         return NULL;
     }
     
+    //converts memory into type
     template<typename type>
-    type from_mem(const char* ch) noexcept
+    type from_mem(const char* ch)
     {
         type t;
         std::memcpy(&t, ch, sizeof(type));
@@ -47,8 +52,8 @@ namespace
     template<typename type>
     void out_memory_of(std::ostream& out, type& t)
     {
-        char *ch(get_mem(t));
-        out<< ch;
+        char *ch(get_mem<type>(t));
+        for(unsigned int x = 0; x < sizeof(type); ++x) out<< ch[x];
         delete[] ch;
     }
     
@@ -64,6 +69,25 @@ namespace
         }
         t = from_mem<type>(ch);
         delete[] ch;
+    }
+    
+    inline std::vector<settings::regex_data> apply_filter(const std::vector<settings::regex_data>& list)
+    {
+        std::vector<settings::regex_data> enabled;
+        for(std::vector<settings::regex_data>::const_iterator it = list.begin(); 
+                it != list.end(); ++it)
+        {
+            if(it->on) enabled.push_back(*it);
+        }
+        return enabled;
+    }
+    
+    inline unsigned int available(std::istream& in)
+    {
+        std::ios::pos_type pos(in.tellg());
+        unsigned int count(in.seekg(0, std::ios::end).tellg() - pos);
+        in.seekg(pos);
+        return count;
     }
     
     
@@ -104,7 +128,8 @@ namespace settings
     {
         //test
         out<< r.s<< mem_delim::value;
-        out_memory_of(out, r.on);
+        bool tempb(r.on);
+        out_memory_of(out, tempb);
         return out;
     }
     
@@ -121,6 +146,11 @@ namespace settings
             {
                 in_memory_of(in, tempb);
                 r.on = tempb;
+            }
+            else
+            {
+                if(in.eof()) std::cout<< "end of file!"<< std::endl;
+                ethrow("read error!");
             }
         }
         in.peek();
@@ -172,9 +202,12 @@ namespace settings
     std::ostream& operator<<(std::ostream& out, const regex_settings_data& r)
     {
         //test
-        out_memory_of(out, r.use_regex);
-        out_memory_of(out, r.use_match);
-        out_memory_of(out, r.use_not_match);
+        bool tempb(r.use_regex);
+        out_memory_of<bool>(out, tempb);
+        tempb = r.use_match;
+        out_memory_of<bool>(out, tempb);
+        tempb = r.use_not_match;
+        out_memory_of<bool>(out, tempb);
         for(std::vector<regex_data>::const_iterator it = r.match.begin(); it != r.match.end(); ++it)
         {
             out<< *it;
@@ -195,22 +228,24 @@ namespace settings
         if(in.good())
         {
             bool tempb;
-            in_memory_of(in, tempb);
+            in_memory_of<bool>(in, tempb);
             r.use_regex = tempb;
-            in_memory_of(in, tempb);
+            in_memory_of<bool>(in, tempb);
             r.use_match = tempb;
-            in_memory_of(in, tempb);
+            in_memory_of<bool>(in, tempb);
             r.use_not_match = tempb;
             in.peek();
-            while(in.good() && (in.peek() != EOF) && (in.peek() != struct_delim::value))
+            while(in.good() && (in.peek() != struct_delim::value))
             {
                 r.match.push_back(regex_data());
                 in>> r.match.back();
             }
             if(in.peek() == struct_delim::value) in.get();
-            while(in.good() && (in.peek() != EOF) && (in.peek() != struct_delim::value))
+            in.get();
+            in.unget();
+            while(in.good() && (in.peek() != struct_delim::value))
             {
-                r.match.push_back(regex_data());
+                r.not_match.push_back(regex_data());
                 in>> r.not_match.back();
             }
             if(in.peek() == struct_delim::value) in.get();
@@ -265,6 +300,31 @@ namespace settings
             in>> s.regex_settings;
         }
         return in;
+    }
+    
+    
+}
+
+namespace settings
+{
+    /** Applies user settings to the regular expression lists.  Returns a std::pair 
+     * containing a list of regular expressions that can be used. */
+    std::pair<std::vector<regex_data>, std::vector<regex_data> > used_expressions(const settings_data& s)
+    {
+        std::pair<std::vector<regex_data>, std::vector<regex_data> > exp;
+        
+        if(s.regex_settings.use_regex)
+        {
+            if(s.regex_settings.use_match)
+            {
+                exp.first = apply_filter(s.regex_settings.match);
+            }
+            if(s.regex_settings.use_not_match)
+            {
+                exp.second = apply_filter(s.regex_settings.not_match);
+            }
+        }
+        return exp;
     }
     
     

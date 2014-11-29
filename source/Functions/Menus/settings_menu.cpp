@@ -74,7 +74,7 @@ namespace menu
             cout.flush();
             common_menu::display_scroll_window(window.win(), regex_list.size());
             cout<< std::string(3, '\n');
-            cout<< "[BCKSPC] - Done  |  [T] - Toggle enabled  |  [ENTR] - Modify Expression"<< endl;
+            cout<< "[BCKSPC] - Done  |  [n] - new expression  |  [T] - Toggle enabled  |  [ENTR] - Modify Expression"<< endl;
             
             key = common::gkey_funct();
             if(key_code::is_listed_control(key))
@@ -106,27 +106,47 @@ namespace menu
             {
                 if(!key.is_control)
                 {
-                    if(!key.control_d.empty() && !regex_list.empty())
+                    if(!key.control_d.empty())
                     {
                         switch(std::tolower((char)key.control_d[0]))
                         {
                             case 't':
                             {
-                                window.selected().on = !window.selected().on;
-                                if(!result.modified) result.modified = true;
+                                if(!regex_list.empty())
+                                {
+                                    window.selected().on = !window.selected().on;
+                                    if(!result.modified) result.modified = true;
+                                }
+                            }
+                            break;
+                            
+                            case 'n':
+                            {
+                                std::string temps(common::inp::get_user_string("Enter an expression: "));
+                                if(temps != GSTRING_CANCEL)
+                                {
+                                    settings::regex_data tempreg;
+                                    tempreg.s = temps;
+                                    tempreg.on = true;
+                                    regex_list.push_back(tempreg);
+                                    if(!result.modified) result.modified = true;
+                                }
                             }
                             break;
                             
                             case '\n':
                             {
-                                std::string temps;
-                                temps = common::inp::get_user_string("Expression : \"" + 
-                                        window.selected().s + "\"" + 
-                                        std::string(4, '\n') + "Enter an expression: ");
-                                if(temps != GSTRING_CANCEL)
+                                if(!regex_list.empty())
                                 {
-                                    window.selected().s = temps;
-                                    if(!result.modified) result.modified = true;
+                                    std::string temps;
+                                    temps = common::inp::get_user_string("Expression : \"" + 
+                                            window.selected().s + "\"" + 
+                                            std::string(4, '\n') + "Enter an expression: ");
+                                    if(temps != GSTRING_CANCEL)
+                                    {
+                                        window.selected().s = temps;
+                                        if(!result.modified) result.modified = true;
+                                    }
                                 }
                             }
                             
@@ -140,6 +160,7 @@ namespace menu
             }
             
         }while(!finished);
+        if(result.modified && !result.canceled) orig_list = regex_list;
         return result;
     }
     

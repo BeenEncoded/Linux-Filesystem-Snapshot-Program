@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <fstream>
 #include <regex>
+#include <utility>
 #include <cstring>
 
 #include "common.hpp"
@@ -17,6 +18,7 @@
 #include "time_class.hpp"
 #include "filesystem.hpp"
 #include "program_settings.hpp"
+#include "settings_loader.hpp"
 #include "settings_menu.hpp"
 
 
@@ -46,6 +48,7 @@ namespace
         std::unordered_map<unsigned long long, std::string> ids;
         std::vector<snapshot::snapshot_data> snapshots;
         std::string folder;
+        settings::settings_data *settings;
     } menu_data;
     
     /* Shows basic info on how to use the main snapshot list menu. */
@@ -55,6 +58,7 @@ namespace
         using std::endl;
         
         common::cls();
+        cout<< "Program Build Time: "<< __TIME__<< " "<< __DATE__<< endl;
         for(unsigned int x = 0; x < 3; x++) cout<< endl;
         cout<< " Controls:"<< endl;
         cout<< endl;
@@ -321,6 +325,28 @@ namespace
         return paths;
     }
     
+    inline bool match_settings(const std::string s, 
+            const std::pair<std::vector<settings::regex_data>, std::vector<settings::regex_data> >& filter)
+    {
+        using settings::regex_data;
+        
+        if(filter.first.empty() && filter.second.empty()) return true;
+        bool matched(filter.first.empty());
+        filter.first.size();
+        filter.second.size();
+        for(std::vector<regex_data>::const_iterator it = filter.first.begin(); 
+                ((it != filter.first.end()) && !matched); ++it)
+        {
+            matched = std::regex_search(s, std::regex(it->s));
+        }
+        for(std::vector<regex_data>::const_iterator it = filter.second.begin(); 
+                ((it != filter.second.end()) && matched); ++it)
+        {
+            matched = !std::regex_search(s, std::regex(it->s));
+        }
+        return matched;
+    }
+    
     /** Finds the created and deleted paths between two snapshots. */
     inline void diff_snapshots(const menu_data& data, const snapshot::snapshot_data& snap1, 
                     const snapshot::snapshot_data& snap2)
@@ -343,15 +369,18 @@ namespace
         snapshot::snapshot_data before(snap1), after(snap2);
         std::ofstream out;
         
-        auto save_diff_result = [](const std::vector<std::string>& paths, 
+        auto save_diff_result = [&data](const std::vector<std::string>& paths, 
                         std::ofstream& out, const std::string& title)->void
         {
             using std::endl;
+            using settings::regex_data;
+            
+            std::pair<std::vector<regex_data>, std::vector<regex_data> > filter(settings::used_expressions(*(data.settings)));
             
             out<< title<< endl<< endl;
             for(std::vector<std::string>::const_iterator it = paths.begin(); it != paths.end(); ++it)
             {
-                out<< *it<< endl;
+                if(match_settings(*it, filter)) out<< *it<< endl;
             }
         };
         
@@ -472,6 +501,7 @@ namespace snapshot_menu
         
         data.folder = folder;
         load_all_headers(data);
+        data.settings = &psettings;
         
         auto update_display = [&data, &display](void)->void
         {
@@ -509,6 +539,7 @@ namespace snapshot_menu
             
             if(key_code::is_listed_control(ch))
             {
+                if(ch == key_code::keys[key_code::code::f5::value]) display_help();
                 if(!display.empty())
                 {
                     //block for containment of key_code::code namespace
@@ -554,10 +585,6 @@ delete the snapshot taken on " + display_time(data.snapshots.at(window.gpos().wh
                                 }
                             }
                             update_display();
-                        }
-                        else if(ch == keys[f5::value])
-                        {
-                            display_help();
                         }
                     }
                 }
@@ -618,7 +645,7 @@ delete the snapshot taken on " + display_time(data.snapshots.at(window.gpos().wh
                                 result.modified = true;
                                 if(!tempres.canceled)
                                 {
-                                    //todo save settings
+                                    settings::save(folder, psettings);
                                 }
                             }
                         }
