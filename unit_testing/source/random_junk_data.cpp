@@ -5,7 +5,7 @@
 #include "random_junk_data.hpp"
 #include "snapshot_class.hpp"
 #include "common.hpp"
-#include "date_class.hpp"
+#include "time_class.hpp"
 
 namespace
 {
@@ -40,7 +40,7 @@ namespace rand_data
         snapshot_data tempsnap;
         unsigned int size(random_number(5000, 10000));
         
-        tempsnap.timestamp = common::get_time();
+        tempsnap.timestamp = tdata::current_time();
         tempsnap.root = "/";
         tempsnap.id = random_number(1, 500);
         for(unsigned int x = 0; x < size; x++)

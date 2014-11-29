@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "snapshot_class.hpp"
-#include "snapshot_file_loaders.hpp"
+#include "snapshot_file_loader.hpp"
 #include "random_junk_data.hpp"
 #include "filesystem.hpp"
 #include "global_defines.hpp"
@@ -36,7 +36,6 @@ namespace test
             bool tempb(true);
             snapshot::snapshot_data tempsnap;
             
-            key_code::keys[key_code::code::backspace::value];
             for(unsigned int x = 0; ((x < 1) && tempb); x++)
             {
                 tempsnap = rand_data::random_snapshot();
@@ -149,7 +148,11 @@ namespace test
         {
             for(delete_iterator_class it(s); !it.at_end(); ++it)
             {
-                if(!it.err.value) it.skip();
+                if(!it.success.value) 
+                {
+                    std::cout<< "Error: \""<< it.success.error<< "\""<< std::endl;
+                    it.skip();
+                }
             }
         }
         return (!is_folder(s).value && !is_symlink(s).value);

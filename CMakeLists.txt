@@ -248,11 +248,11 @@ add_mthread()
 
 add_files()
 
-link_mthread()
-
 if(USING_ADDITIONAL_LIBS)
     add_additional_libs()
 endif()
+
+link_mthread()
 
 if(USING_NCURSES_LIBRARY)
     add_ncurses()
