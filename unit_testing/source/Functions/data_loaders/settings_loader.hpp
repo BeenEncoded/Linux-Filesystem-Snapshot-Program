@@ -9,7 +9,7 @@ namespace settings
 {
     std::string settings_folder() noexcept;
     settings::settings_data load(const std::string&);
-    bool save(const std::string&, const settings::settings_data&);
+    bool save(const settings::settings_data&);
     
 }
 

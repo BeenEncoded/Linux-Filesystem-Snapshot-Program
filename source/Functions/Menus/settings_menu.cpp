@@ -5,6 +5,7 @@
 #include "settings_menu.hpp"
 #include "program_settings.hpp"
 #include "scroll_display.hpp"
+#include "filesystem.hpp"
 #include "common_menu.hpp"
 #include "common.hpp"
 #include "global_defines.hpp"
@@ -13,9 +14,12 @@ namespace
 {
     void regex_list_display(const std::vector<settings::regex_data>&, 
             std::vector<std::string>&);
+    bool delete_folder(const std::string&);
+    unsigned int folder_count(const std::string&);
     
     
-    
+    /** Takes a list of regex settings and constructs a list of strings
+     * suitable for display within a menu. */
     inline void regex_list_display(const std::vector<settings::regex_data>& data, 
                     std::vector<std::string>& display)
     {
@@ -39,6 +43,46 @@ namespace
             display.back() += std::string(((max_size + 5) - display.back().size()), ' ');
             display.back() += (it->on ? "ON" : "OFF");
         }
+    }
+    
+    inline bool delete_folder(const std::string& folder)
+    {
+        using fsys::delete_iterator_class;
+        using fsys::is_folder;
+        using fsys::is_symlink;
+        using fsys::result_data_boolean;
+        using std::cout;
+        using std::endl;
+        
+        common::cls();
+        if(is_folder(folder).value && !is_symlink(folder).value)
+        {
+            for(delete_iterator_class it(folder); !it.at_end(); ++it)
+            {
+                if(!it.success.value)
+                {
+                    cout<< "Error: "<< it.success.error<< endl;
+                    it.skip();
+                }
+            }
+            return !is_folder(folder).value;
+        }
+        return false;
+    }
+    
+    inline unsigned int folder_count(const std::string& s)
+    {
+        using fsys::is_folder;
+        using fsys::is_symlink;
+        using fsys::tree_riterator_class;
+        
+        unsigned int count(0);
+        
+        if(is_folder(s).value && !is_symlink(s).value)
+        {
+            for(tree_riterator_class it(s); !it.at_end(); ++it, ++count);
+        }
+        return count;
     }
     
     
@@ -296,6 +340,7 @@ namespace menu
             common::center("Program Settings");
             cout<< std::string(4, '\n');
             cout<< " 1 -  Regular Expression Settings ("<< (settings.regex_settings.use_regex ? "ON" : "OFF")<< ")"<< endl;
+            cout<< " 2 -  Delete all comparison records  (Records: "<< folder_count(settings.global.records_folder)<< ")"<< endl;
             cout<< endl;
             cout<< " c -  Cancel"<< endl;
             cout<< " [BCKSPCE] -  Done"<< endl;
@@ -315,6 +360,26 @@ namespace menu
                             {
                                 menu_return_data tempres(modify_regex_settings(settings.regex_settings));
                                 if(tempres.modified) result.modified = true;
+                            }
+                            break;
+                            
+                            case '2':
+                            {
+                                if(fsys::is_folder(settings.global.records_folder).value && 
+                                        !fsys::is_symlink(settings.global.records_folder).value)
+                                {
+                                    if(common::inp::is_sure("Do you really want to delete \"" + 
+                                            settings.global.records_folder + "\"?"))
+                                    {
+                                        if(!delete_folder(settings.global.records_folder))
+                                        {
+                                            cout<< "Could not delete the folder!"<< endl;
+                                            common::wait();
+                                            common::cls();
+                                            cout<< "please wait..."<< endl;
+                                        }
+                                    }
+                                }
                             }
                             break;
                             

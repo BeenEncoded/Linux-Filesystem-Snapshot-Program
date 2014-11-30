@@ -10,6 +10,7 @@
 #include "global_defines.hpp"
 #include "filesystem.hpp"
 #include "common.hpp"
+#include "snapshot_file_loader.hpp"
 
 namespace
 {
@@ -260,7 +261,8 @@ namespace settings
 /** settings_data member functions: */
 namespace settings
 {
-    settings_data::settings_data() noexcept : regex_settings()
+    settings_data::settings_data() noexcept : regex_settings(),
+            global()
     {
     }
     
@@ -275,12 +277,14 @@ namespace settings
     
     bool settings_data::operator==(const settings_data& s) const noexcept
     {
-        return (this->regex_settings == s.regex_settings);
+        return ((this->regex_settings == s.regex_settings) && 
+                (this->global == s.global));
     }
     
     bool settings_data::operator!=(const settings_data& s) const noexcept
     {
-        return (this->regex_settings != s.regex_settings);
+        return ((this->regex_settings != s.regex_settings) || 
+                (this->global != s.global));
     }
     
     std::ostream& operator<<(std::ostream& out, const settings_data& s)
@@ -300,6 +304,44 @@ namespace settings
             in>> s.regex_settings;
         }
         return in;
+    }
+    
+    
+}
+
+/** setting_constants_data member functions: */
+namespace settings
+{
+    setting_constants_data::setting_constants_data() noexcept : 
+            snapshot_folder(snapshot::snapshot_folder()),
+            records_folder(snapshot_folder + fsys::pref_slash() + std::string("comparison records"))
+    {
+    }
+    
+    setting_constants_data::~setting_constants_data() noexcept
+    {
+    }
+    
+    setting_constants_data& setting_constants_data::operator=(const setting_constants_data& s) noexcept
+    {
+        if(this != &s)
+        {
+            this->snapshot_folder = s.snapshot_folder;
+            this->records_folder = s.records_folder;
+        }
+        return *this;
+    }
+    
+    bool setting_constants_data::operator==(const setting_constants_data& s) const noexcept
+    {
+        return ((this->snapshot_folder == s.snapshot_folder) && 
+                (this->records_folder == s.records_folder));
+    }
+    
+    bool setting_constants_data::operator!=(const setting_constants_data& s) const noexcept
+    {
+        return ((this->snapshot_folder != s.snapshot_folder) || 
+                (this->records_folder != s.records_folder));
     }
     
     

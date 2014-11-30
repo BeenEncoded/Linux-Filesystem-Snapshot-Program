@@ -3,9 +3,8 @@
 #include <string>
 
 #include "snapshot_file_loader.hpp"
-#include "global_defines.hpp"
 #include "modify_snapshot_menu.hpp"
-#include "filesystem.hpp"
+#include "program_settings.hpp"
 #include "settings_loader.hpp"
 
 
@@ -18,11 +17,10 @@ namespace
     inline void main_menu()
     {
         using settings::settings_data;
-        using snapshot::snapshot_folder;
-        using common_menu::menu_return_data;
         
-        settings_data program_settings(settings::load(snapshot_folder()));
-        snapshot_menu::main_snapshot_menu(snapshot_folder(), program_settings);
+        settings_data program_settings;
+        program_settings = settings::load(program_settings.global.snapshot_folder);
+        snapshot_menu::main_snapshot_menu(program_settings);
     }
     
     inline settings::settings_data load_settings(const std::string& folder)

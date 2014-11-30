@@ -7,7 +7,7 @@
 
 namespace snapshot_menu
 {
-    common_menu::menu_return_data main_snapshot_menu(const std::string&, settings::settings_data&);
+    common_menu::menu_return_data main_snapshot_menu(settings::settings_data&);
     
 }
 

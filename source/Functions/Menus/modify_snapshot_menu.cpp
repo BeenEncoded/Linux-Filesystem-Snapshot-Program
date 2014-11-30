@@ -30,7 +30,7 @@ namespace
     bool remove_snapshot(const menu_data&, const unsigned long long&);
     std::string display_time(const tdata::time_class&);
     void diff_snapshots(const menu_data&, const snapshot::snapshot_data&, const snapshot::snapshot_data&);
-    bool create_record_folder(const std::string&);
+    bool create_folder(const std::string&);
     std::string record_folder(const std::string&);
     void load_all_headers(menu_data&);
     std::vector<std::string> difference_between(const std::unordered_set<std::string>&, 
@@ -259,26 +259,15 @@ namespace
                         std::string("records"));
     }
     
-    inline bool create_record_folder(const std::string& f)
+    inline bool create_folder(const std::string& folder)
     {
         using fsys::is_folder;
         using fsys::is_file;
         using fsys::is_symlink;
-        using snapshot::snapshot_folder;
-        
-        std::string folder(record_folder(f));
         
         if(!is_folder(folder).value && !is_file(folder).value && !is_symlink(folder).value)
         {
-            if(!is_folder(snapshot_folder()).value && !is_file(snapshot_folder()).value && 
-                            !is_symlink(snapshot_folder()).value)
-            {
-                if(!fsys::create_folder(snapshot_folder()).value) return false;
-            }
-            if(is_folder(snapshot_folder()).value && !is_symlink(snapshot_folder()).value)
-            {
-                fsys::create_folder(folder);
-            }
+            fsys::create_folder(folder);
         }
         return (is_folder(folder).value && !is_symlink(folder).value);
     }
@@ -386,7 +375,7 @@ namespace
         
         if((data.ids.find(before.id) != data.ids.end()) && 
                         (data.ids.find(after.id) != data.ids.end()) && 
-                        create_record_folder(data.folder))
+                        create_folder(data.settings->global.records_folder))
         {
             if(after.timestamp < before.timestamp)
             {
@@ -396,7 +385,7 @@ namespace
             paths_after = load_paths(data.ids.find(after.id)->second);
             
             now = tdata::current_time();
-            temps = (record_folder(data.folder) + fsys::pref_slash() + 
+            temps = (data.settings->global.records_folder + fsys::pref_slash() + 
                             now.month_name() + " " + std::to_string(now.mday()) + 
                             ", " + std::to_string(now.gyear()) + "  at " + 
                             std::to_string(now.hour()) + " " + 
@@ -479,8 +468,7 @@ namespace snapshot_menu
     
     /** Shows a menu that allows a user to select from all the saved snapshots, and
      * make modifications.  "folder" is the folder that the snapshots are saved in. */
-    common_menu::menu_return_data main_snapshot_menu(const std::string& folder, 
-            settings::settings_data& psettings)
+    common_menu::menu_return_data main_snapshot_menu(settings::settings_data& psettings)
     {
         using namespace common_menu;
         using scrollDisplay::scroll_display_class;
@@ -499,7 +487,7 @@ namespace snapshot_menu
         common_menu::selection_class selection;
         bool finished(false);
         
-        data.folder = folder;
+        data.folder = psettings.global.snapshot_folder;
         load_all_headers(data);
         data.settings = &psettings;
         
@@ -645,7 +633,7 @@ delete the snapshot taken on " + display_time(data.snapshots.at(window.gpos().wh
                                 result.modified = true;
                                 if(!tempres.canceled)
                                 {
-                                    settings::save(folder, psettings);
+                                    settings::save(psettings);
                                 }
                             }
                         }
