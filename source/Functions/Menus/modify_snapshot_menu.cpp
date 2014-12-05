@@ -559,7 +559,7 @@ delete the snapshot taken on " + display_time(data.snapshots.at(window.gpos().wh
                                     {
                                         if(data.ids.find(data.snapshots.at(window.gpos().whole).id) == data.ids.end())
                                         {
-                                            ethrow("Error: Could not delete id from loaded ids!");
+                                            ethrow("Error: Removal of non-existent element attempted!");
                                         }
                                         data.ids.erase(data.ids.find(data.snapshots.at(window.gpos().whole).id));
                                         data.snapshots.erase(data.snapshots.begin() + window.gpos().whole);

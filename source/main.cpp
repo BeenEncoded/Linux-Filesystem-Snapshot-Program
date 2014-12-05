@@ -1,6 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <string>
+
 
 #include "snapshot_file_loader.hpp"
 #include "modify_snapshot_menu.hpp"
@@ -11,7 +9,6 @@
 namespace
 {
     void main_menu();
-    
     
 
     inline void main_menu()
