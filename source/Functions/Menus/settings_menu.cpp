@@ -319,6 +319,15 @@ namespace menu
         return result;
     }
     
+    common_menu::menu_return_data modify_editor_settings(settings::editor_data& orig_editor)
+    {
+        using common_menu::menu_return_data;
+        
+        menu_return_data res;
+        
+        return res;
+    }
+    
     /** Allows the user to modify program settings */
     common_menu::menu_return_data modify_program_settings(settings::settings_data& cur_settings)
     {

@@ -262,6 +262,7 @@ namespace settings
 namespace settings
 {
     settings_data::settings_data() noexcept : regex_settings(),
+            editor(),
             global()
     {
     }
@@ -270,6 +271,7 @@ namespace settings
     {
         if(this != &s)
         {
+            this->editor = s.editor;
             this->regex_settings = s.regex_settings;
         }
         return *this;
@@ -278,19 +280,25 @@ namespace settings
     bool settings_data::operator==(const settings_data& s) const noexcept
     {
         return ((this->regex_settings == s.regex_settings) && 
-                (this->global == s.global));
+                (this->global == s.global) && 
+                (this->editor == s.editor));
     }
     
     bool settings_data::operator!=(const settings_data& s) const noexcept
     {
         return ((this->regex_settings != s.regex_settings) || 
+                (this->editor != s.editor) || 
                 (this->global != s.global));
     }
     
     std::ostream& operator<<(std::ostream& out, const settings_data& s)
     {
         //test
-        out<< s.regex_settings;
+        if(out.good())
+        {
+            out<< s.regex_settings;
+            out<< s.editor;
+        }
         return out;
     }
     
@@ -302,6 +310,7 @@ namespace settings
         if(in.good())
         {
             in>> s.regex_settings;
+            in>> s.editor;
         }
         return in;
     }
@@ -342,6 +351,65 @@ namespace settings
     {
         return ((this->snapshot_folder != s.snapshot_folder) || 
                 (this->records_folder != s.records_folder));
+    }
+    
+    
+}
+
+/** editor_data member functions */
+namespace settings
+{
+    editor_data::editor_data() noexcept : on(false), exec("/bin/nano")
+    {
+    }
+    
+    editor_data::~editor_data(){}
+    
+    editor_data& editor_data::operator=(const editor_data& e) noexcept
+    {
+        if(this != &e)
+        {
+            this->on = e.on;
+            this->exec = e.exec;
+        }
+        return *this;
+    }
+    
+    bool editor_data::operator==(const editor_data& e) const noexcept
+    {
+        return ((this->on == e.on) && 
+                (this->exec == e.exec));
+    }
+    
+    bool editor_data::operator!=(const editor_data& e) const noexcept
+    {
+        return ((this->on != e.on) || 
+                (this->exec != e.exec));
+    }
+    
+    std::ostream& operator<<(std::ostream& out, const editor_data& e)
+    {
+        if(out.good())
+        {
+            bool tempb(e.on);
+            out_memory_of<bool>(out, tempb);
+            out<< e.exec<< mem_delim::value;
+        }
+        return out;
+    }
+    
+    std::istream& operator>>(std::istream& in, editor_data& e)
+    {
+        e = editor_data();
+        in.peek();
+        if(in.good())
+        {
+            bool tempb(false);
+            in_memory_of<bool>(in, tempb);
+            e.on = tempb;
+            common::safe_getline(in, e.exec, mem_delim::value);
+        }
+        return in;
     }
     
     
