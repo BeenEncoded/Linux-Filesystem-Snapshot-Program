@@ -196,6 +196,7 @@ namespace scrollDisplay
     
     //explitic instantiations for window_data_class go here:
     template class window_data_class<settings::regex_data>;
+    template class window_data_class<std::string>;
     
 }
 

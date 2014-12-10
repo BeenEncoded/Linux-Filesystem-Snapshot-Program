@@ -319,15 +319,6 @@ namespace menu
         return result;
     }
     
-    common_menu::menu_return_data modify_editor_settings(settings::editor_data& orig_editor)
-    {
-        using common_menu::menu_return_data;
-        
-        menu_return_data res;
-        
-        return res;
-    }
-    
     /** Allows the user to modify program settings */
     common_menu::menu_return_data modify_program_settings(settings::settings_data& cur_settings)
     {
@@ -349,7 +340,8 @@ namespace menu
             common::center("Program Settings");
             cout<< std::string(4, '\n');
             cout<< " 1 -  Regular Expression Settings ("<< (settings.regex_settings.use_regex ? "ON" : "OFF")<< ")"<< endl;
-            cout<< " 2 -  Delete all comparison records  (Records: "<< folder_count(settings.global.records_folder)<< ")"<< endl;
+            cout<< " 2 -  Editor: \""<< settings.editor<< "\""<< endl;
+            cout<< " 3 -  Delete all comparison records  (Records: "<< folder_count(settings.global.records_folder)<< ")"<< endl;
             cout<< endl;
             cout<< " c -  Cancel"<< endl;
             cout<< " [BCKSPCE] -  Done"<< endl;
@@ -373,6 +365,35 @@ namespace menu
                             break;
                             
                             case '2':
+                            {
+                                std::string temps(common::inp::get_user_string(
+                                        "(enter nothing to not use an editor)\n\nEditor currently set to: \"" + settings.editor + 
+                                        "\"\n\n\nEnter the path of your favorite text editor: "));
+                                if(temps != GSTRING_CANCEL)
+                                {
+                                    if((fsys::is_file(temps).value && 
+                                            !fsys::is_symlink(temps).value) ||
+                                            temps.empty())
+                                    {
+                                        settings.editor = temps;
+                                        if(!result.modified) result.modified = true;
+                                    }
+                                    else
+                                    {
+                                        common::cls();
+                                        cout<< std::string(v_center::value, '\n');
+                                        common::center("You must enter a valid path!");
+                                        cout.flush();
+                                        common::wait();
+                                        common::cls();
+                                        cout<< "please wait...";
+                                        cout.flush();
+                                    }
+                                }
+                            }
+                            break;
+                            
+                            case '3':
                             {
                                 if(fsys::is_folder(settings.global.records_folder).value && 
                                         !fsys::is_symlink(settings.global.records_folder).value)

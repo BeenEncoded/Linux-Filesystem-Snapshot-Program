@@ -11,16 +11,12 @@ namespace settings
     typedef struct regex_data regex_data;
     typedef struct regex_settings_data regex_settings_data;
     typedef struct setting_constants_data setting_constants_data;
-    typedef struct editor_data editor_data;
     
     std::istream& operator>>(std::istream&, regex_data&);
     std::ostream& operator<<(std::ostream&, const regex_data&);
     
     std::istream& operator>>(std::istream&, regex_settings_data&);
     std::ostream& operator<<(std::ostream&, const regex_settings_data&);
-    
-    std::istream& operator>>(std::istream&, editor_data&);
-    std::ostream& operator<<(std::ostream&, const editor_data&);
     
     std::ostream& operator<<(std::ostream&, const settings_data&);
     std::istream& operator>>(std::istream&, settings_data&);
@@ -70,21 +66,6 @@ namespace settings
         std::string snapshot_folder, records_folder;
     } setting_constants_data;
     
-    /** Settings regarding the user's editor choice
-     * for viewing snapshot records with. */
-    typedef struct editor_data
-    {
-        explicit editor_data() noexcept;
-        ~editor_data();
-        
-        editor_data& operator=(const editor_data&) noexcept;
-        bool operator==(const editor_data&) const noexcept;
-        bool operator!=(const editor_data&) const noexcept;
-        
-        bool on : 1;
-        std::string exec;
-    } editor_data;
-    
     /** Program settings */
     typedef struct settings_data
     {
@@ -96,7 +77,7 @@ namespace settings
         bool operator!=(const settings_data&) const noexcept;
         
         regex_settings_data regex_settings;
-        editor_data editor;
+        std::string editor;
         const setting_constants_data global;
     } settings_data;
     
