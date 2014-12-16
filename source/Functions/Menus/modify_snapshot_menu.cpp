@@ -502,7 +502,7 @@ namespace snapshot_menu
         };
         
         update_display();
-        window.window_size() = common_menu::wsize::value;
+        window.window_size() = 7;
         do
         {
             common::cls();
