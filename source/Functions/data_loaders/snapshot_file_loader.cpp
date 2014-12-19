@@ -22,7 +22,6 @@ namespace
 {
     string file_extension(const std::string&);
     bool load_id(const std::string&, unsigned long long&);
-    std::string snapshot_path(const unsigned long long&);
     std::vector<std::string> paths_of_extension(const std::string&, const std::string&);
     
     
@@ -59,13 +58,6 @@ namespace
             success = (id > 0);
         }
         return success;
-    }
-    
-    /* Returns the path of a snapshot given its id.*/
-    inline std::string snapshot_path(const unsigned long long& id)
-    {
-        return std::string(snapshot::snapshot_folder() + pref_slash() + std::string("snapshot") + 
-                        std::to_string(id) + std::string(fsyssnap_SNAPSHOT_FILE_EXTENSION));
     }
     
     /** Finds a all the paths in a folder that end in a specified extension. */

@@ -44,10 +44,10 @@ namespace
     inline std::string file_ext(const std::string& s)
     {
         std::string temps(s);
-        std::size_t pos(s.rfind(fsys::pref_slash()));
+        std::size_t pos(s.rfind('.'));
         if(pos != std::string::npos)
         {
-            temps.erase(temps.begin(), (temps.begin() + pos + 1));
+            temps.erase(temps.begin(), (temps.begin() + pos));
         }
         return temps;
     }
@@ -151,7 +151,8 @@ namespace menu
             cout<< " [BCKSPC] -  Done"<< endl;
             cout<< " [ENTR] -  View Record"<< endl;
             
-            
+            /** cur_pos
+             * make it so that this menu exits when there are no records left */
             ch = common::gkey_funct();
             if(key_code::is_listed_control(ch))
             {
@@ -185,6 +186,7 @@ the record \"" + window.selected() + "\"?"))
                                     cout<< "please wait...";
                                     cout.flush();
                                 }
+                                record_files = paths_of_ext(psettings.global.records_folder, ".txt");
                             }
                         }
                     }
@@ -213,6 +215,8 @@ all snapshot comparison records?  This can not be undone!"))
                                         cout<< "please wait...";
                                         cout.flush();
                                     }
+                                    record_files = paths_of_ext(psettings.global.records_folder, ".txt");
+                                    if(record_files.empty()) finished = true;
                                 }
                             }
                         }

@@ -1,7 +1,7 @@
 
 
 #include "snapshot_file_loader.hpp"
-#include "modify_snapshot_menu.hpp"
+#include "main_menu.hpp"
 #include "program_settings.hpp"
 #include "settings_loader.hpp"
 
@@ -16,8 +16,8 @@ namespace
         using settings::settings_data;
         
         settings_data program_settings;
-        program_settings = settings::load(program_settings.global.snapshot_folder);
-        snapshot_menu::main_snapshot_menu(program_settings);
+        program_settings = settings::load(program_settings.global.settings_folder);
+        menu::main_menu(program_settings);
     }
     
     inline settings::settings_data load_settings(const std::string& folder)

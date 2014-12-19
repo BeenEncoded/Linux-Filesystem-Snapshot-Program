@@ -12,6 +12,7 @@
 #include "snapshot_file_loader.hpp"
 #include "filesystem.hpp"
 #include "time_class.hpp"
+#include "program_settings.hpp"
 
 namespace
 {
@@ -19,7 +20,7 @@ namespace
     
     typedef struct take_snapshot_proc_data take_snapshot_proc_data;
     
-    void construct_tsproc_data(take_snapshot_proc_data&, const std::string&);
+    void construct_tsproc_data(take_snapshot_proc_data*, const std::string&);
     void collect_snapshot(take_snapshot_proc_data*);
     void show_process_output(take_snapshot_proc_data*);
     void display_current_status(take_snapshot_proc_data*);
@@ -110,34 +111,36 @@ namespace
     /** Initializes all the data for the snapshot collection.  It opens a file
      * and saves the header to a "new" snapshot, and it should be used before 
      * executing a new snapshot. */
-    inline void construct_tsproc_data(take_snapshot_proc_data& pd, const std::string& rt)
+    inline void construct_tsproc_data(take_snapshot_proc_data *pd, const std::string& rt)
     {
         snapshot::snapshot_data head;
         
-        if(!fsys::is_folder(snapshot::snapshot_folder()))
+        if(!fsys::is_folder(settings::settings_data().global.snapshot_folder))
         {
-            if(!fsys::create_folder(snapshot::snapshot_folder()).value) return;
+            if(!fsys::create_folder(settings::settings_data().global.snapshot_folder).value) return;
         }
-        pd.root = rt;
-        pd.sid = snapshot::new_snapshot_id();
-        pd.save_file = (snapshot::snapshot_folder() + fsys::pref_slash() + 
-                        std::to_string(pd.sid) + fsyssnap_SNAPSHOT_FILE_EXTENSION);
-        pd.canceled = false;
-        pd.finished = false;
-        pd.paused = false;
-        pd.count = 0;
-        pd.current_path = new char[max_path_size::value];
+        pd->root = rt;
+        pd->sid = snapshot::new_snapshot_id();
+        pd->save_file = (settings::settings_data().global.snapshot_folder + 
+                fsys::pref_slash() + std::to_string(pd->sid) + 
+                fsyssnap_SNAPSHOT_FILE_EXTENSION);
+        std::cout<< "Save file: \""<< pd->save_file<< std::endl;
+        pd->canceled = false;
+        pd->finished = false;
+        pd->paused = false;
+        pd->count = 0;
+        pd->current_path = new char[max_path_size::value];
         
         //blank the new string:
-        std::strcpy(pd.current_path, std::string(max_path_size::value, '\0').c_str());
+        std::strcpy(pd->current_path, std::string(max_path_size::value, '\0').c_str());
         
         head.timestamp = tdata::current_time();
-        head.root = pd.root;
-        head.id = pd.sid;
-        pd.out.open(pd.save_file.c_str(), std::ios::binary);
-        if(!pd.out.good()) ethrow(std::string("Error, out is not good!  File: \"" + 
-                        pd.save_file + "\""));
-        snapshot::out_header(pd.out, head);
+        head.root = pd->root;
+        head.id = pd->sid;
+        pd->out.open(pd->save_file.c_str(), std::ios::binary);
+        if(!pd->out.good()) ethrow(std::string("Error, out is not good!  File: \"" + 
+                        pd->save_file + "\""));
+        snapshot::out_header(pd->out, head);
     }
     
     inline std::string filename(const std::string& s) noexcept
@@ -276,7 +279,7 @@ namespace snapshot
         take_snapshot_proc_data *pd(new take_snapshot_proc_data);
         unsigned long long id(0);
         
-        construct_tsproc_data(*pd, s);
+        construct_tsproc_data(pd, s);
         
         std::thread collect(collect_snapshot, pd), output(show_process_output, pd);
         

@@ -454,33 +454,6 @@ unknown error occured!";
         return res;
     }
     
-    inline bool file_is_type(const std::string& s, const boost::filesystem::file_type& t)
-    {
-        using boost::filesystem::status;
-        using boost::filesystem::path;
-        using boost::filesystem::exists;
-        
-        boost::system::error_code ec;
-        bool b(false);
-        
-        if(exists(s, ec))
-        {
-            try
-            {
-                b = (status(path(s), ec).type() == t);
-                if(is_error(ec))
-                {
-                    ethrow(ec.message());
-                }
-            }
-            catch(const std::exception& e)
-            {
-                ethrow(e.what());
-            }
-        }
-        return b;
-    }
-    
     
 }
 
@@ -791,118 +764,96 @@ invalid path!  Args can only be a folder.");
         this->success.value = false;
         this->success.error.erase();
         this->success.path.erase();
-        switch(this->it != this->end)
+        if(this->it != this->end)
         {
-            case true:
+            this->success.path = this->value();
+            if(is_folder(this->value()).value && 
+                    !is_symlink(this->value()).value)
             {
-                this->success.path = this->value();
-                if(is_folder(this->value()).value && 
-                        !is_symlink(this->value()).value)
+                try
                 {
-                    try
-                    {
-                      this->success.value = copy_directories(this->p.string(), this->dest, this->value());
-                    }
-                    catch(const std::exception& e)
-                    {
-                        ethrow(e.what());
-                    }
-                    if(!this->success.value)
-                    {
-                        this->success.error= "Failed copy directories";
-                    }
+                  this->success.value = copy_directories(this->p.string(), this->dest, this->value());
                 }
-                else if(is_symlink(this->value()).value || is_file(this->value()).value)
+                catch(const std::exception& e)
                 {
-                    try
+                    ethrow(e.what());
+                }
+                if(!this->success.value)
+                {
+                    this->success.error= "Failed copy directories";
+                }
+            }
+            else if(is_symlink(this->value()).value || is_file(this->value()).value)
+            {
+                try
+                {
+                    //copy the parent path of the file if it isn't there:
+                    switch(parent_path(this->value()) == this->p.string())
                     {
-                        //copy the parent path of the file if it isn't there:
-                        switch(parent_path(this->value()) == this->p.string())
+                        case false:
                         {
-                            case false:
-                            {
-                                std::string temps(this->dest + split_subdir(parent_path(this->p.string()), this->value()).second);
-                                this->success.value = true;
-                                
-                                //only copy the parent path if it doesn't exist
-                                if(!is_folder(temps).value)
-                                {
-                                  this->success.value = copy_directories(this->p.string(), 
-                                                    this->dest, parent_path(this->value()));
-                                }
-                            }
-                            break;
+                            std::string temps(this->dest + split_subdir(parent_path(this->p.string()), this->value()).second);
+                            this->success.value = true;
                             
-                            case true:
+                            //only copy the parent path if it doesn't exist
+                            if(!is_folder(temps).value)
                             {
-                                std::string temps(this->dest + 
-                                        boost::filesystem::path("/").make_preferred().string() + 
-                                        this->p.filename().string());
-                                if(!fsys::is_folder(temps).value)
-                                {
-                                    boost::filesystem::copy_directory(this->p, boost::filesystem::path(temps));
-                                }
-                                this->success.value = fsys::is_folder(temps).value;
+                              this->success.value = copy_directories(this->p.string(), 
+                                                this->dest, parent_path(this->value()));
                             }
-                            break;
-                            
-                            default:
-                            {
-                            }
-                            break;
                         }
+                        break;
                         
-                        //did we succeed in copying the parent path of the file?
-                        switch(this->success.value)
+                        case true:
                         {
-                            case true:
+                            std::string temps(this->dest + 
+                                    boost::filesystem::path("/").make_preferred().string() + 
+                                    this->p.filename().string());
+                            if(!fsys::is_folder(temps).value)
                             {
-                                std::string temps;
-                                if(is_child(this->value(), this->p.string()))
-                                {
-                                    temps = (this->dest + split_subdir(parent_path(this->p.string()), this->value()).second);
-                                    this->success = fcopy(this->value(), parent_path(temps));
-                                }
-                                else
-                                {
-                                    this->success.value = false;
-                                    this->success.error = ("Error, could not copy path!  \"" + this->value() + 
-                                                    "\" is not a child path of \"" + 
-                                                    this->p.string() + "\"");
-                                }
+                                boost::filesystem::copy_directory(this->p, boost::filesystem::path(temps));
                             }
-                            break;
-
-                            case false:
-                            {
-                                this->success.error = ("Failed to create parent directories at destination!");
-                            }
-                            break;
-
-                            default:
-                            {
-                            }
-                            break;
+                            this->success.value = fsys::is_folder(temps).value;
+                        }
+                        break;
+                        
+                        default:
+                        {
+                        }
+                        break;
+                    }
+                    
+                    //did we succeed in copying the parent path of the file?
+                    if(this->success.value)
+                    {
+                        std::string temps;
+                        if(is_child(this->value(), this->p.string()))
+                        {
+                            temps = (this->dest + split_subdir(parent_path(this->p.string()), this->value()).second);
+                            this->success = fcopy(this->value(), parent_path(temps));
+                        }
+                        else
+                        {
+                            this->success.value = false;
+                            this->success.error = ("Error, could not copy path!  \"" + this->value() + 
+                                            "\" is not a child path of \"" + 
+                                            this->p.string() + "\"");
                         }
                     }
-                    catch(const std::exception& e)
+                    else
                     {
-                        ethrow(e.what());
+                        this->success.error = ("Failed to create parent directories at destination!");
                     }
                 }
+                catch(const std::exception& e)
+                {
+                    ethrow(e.what());
+                }
             }
-            break;
-            
-            case false:
-            {
-              this->success.error = "Iterator fault: it = end; can not iterate!";
-            }
-            break;
-            
-            default:
-            {
-            }
-            break;
+        }
+        else
+        {
+            this->success.error = "Iterator fault: it = end; can not iterate!";
         }
         
         try

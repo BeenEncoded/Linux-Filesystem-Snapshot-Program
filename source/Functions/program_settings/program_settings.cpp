@@ -15,7 +15,6 @@
 namespace
 {
     std::vector<settings::regex_data> apply_filter(const std::vector<settings::regex_data>&);
-    unsigned int available(std::istream&);
     
     
     //converts type into memory
@@ -28,7 +27,7 @@ namespace
     }
     
     template<char*>
-    char* get_mem(char*& t)
+    char* get_mem(char*& t __attribute__((unused)))
     {
         ethrow("[PROGRAMMING ERROR]: Can not convert char* to char* through memory!");
         return NULL;
@@ -44,7 +43,7 @@ namespace
     }
     
     template<char*>
-    char* from_mem(const char* ch)
+    char* from_mem(const char* ch __attribute__((unused)))
     {
         ethrow("[PROGRAMMING ERROR]: Can not convert char* to char* through memory!");
         return NULL;
@@ -81,14 +80,6 @@ namespace
             if(it->on) enabled.push_back(*it);
         }
         return enabled;
-    }
-    
-    inline unsigned int available(std::istream& in)
-    {
-        std::ios::pos_type pos(in.tellg());
-        unsigned int count(in.seekg(0, std::ios::end).tellg() - pos);
-        in.seekg(pos);
-        return count;
     }
     
     
@@ -322,8 +313,9 @@ namespace settings
 namespace settings
 {
     setting_constants_data::setting_constants_data() noexcept : 
-            snapshot_folder(snapshot::snapshot_folder()),
-            records_folder(snapshot_folder + fsys::pref_slash() + std::string("comparison records"))
+            snapshot_folder(snapshot::snapshot_folder() + fsys::pref_slash() + std::string("snapshots taken")),
+            records_folder(snapshot_folder + fsys::pref_slash() + std::string("comparison records")),
+            settings_folder(snapshot::snapshot_folder())
     {
     }
     
@@ -337,6 +329,7 @@ namespace settings
         {
             this->snapshot_folder = s.snapshot_folder;
             this->records_folder = s.records_folder;
+            this->settings_folder = s.settings_folder;
         }
         return *this;
     }
@@ -344,13 +337,15 @@ namespace settings
     bool setting_constants_data::operator==(const setting_constants_data& s) const noexcept
     {
         return ((this->snapshot_folder == s.snapshot_folder) && 
-                (this->records_folder == s.records_folder));
+                (this->records_folder == s.records_folder) && 
+                (this->settings_folder == s.settings_folder));
     }
     
     bool setting_constants_data::operator!=(const setting_constants_data& s) const noexcept
     {
         return ((this->snapshot_folder != s.snapshot_folder) || 
-                (this->records_folder != s.records_folder));
+                (this->records_folder != s.records_folder) ||
+                (this->settings_folder != s.settings_folder));
     }
     
     

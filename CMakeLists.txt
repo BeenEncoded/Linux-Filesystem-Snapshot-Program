@@ -35,7 +35,7 @@ set(PROGRAM_NAME filesystem_snapshot_program)
 set(SOURCE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 #compiler flag settings
-set(BUILD_RELEASE false) #default debug
+set(BUILD_RELEASE true) #default debug
 set(ENABLE_MULTITHREADING true)
 set(CPLUSPLUS_11 true)
 set(C_11 true)
@@ -43,6 +43,7 @@ set(STRICT_COMPILE true)
 set(STATIC_COMPILE true)
 set(OPTIMIZE_BUILD_FLAGS true) #will only be used for release.  :)
 set(64_BIT_BUILD true)
+set(USE_CLANG true)
 
 #boost settings
 set(USING_BOOST_LIBRARY true)
@@ -58,6 +59,7 @@ set(USING_NCURSES_LIBRARY true)
 set(NCURSES_LIB_COMPONENTS ncurses) #change these library filenames if necessary
 set(NCURSES_LIB_COMPONENTS_LITERAL libncurses.a)
 
+
 #-------------------------------------------------------------------------------------------------
 #cmake settings:
 
@@ -71,7 +73,6 @@ else()
 endif()
 
 set(BUILD_SHARED_LIBS OFF)
-
 
 # =================================================================================================
 # =================================================================================================
@@ -107,7 +108,10 @@ endmacro(set_static)
 macro(add_mthread)
     if(CPLUSPLUS_11)
         if(ENABLE_MULTITHREADING)
-            add_definitions(-pthread -Wl,--no-as-needed)
+            #add_definitions(-pthread -Wl,--no-as-needed)
+            if(NOT USE_CLANG)
+                add_definitions(-lpthread)
+            endif()
         endif()
     endif()
 endmacro(add_mthread)
@@ -226,22 +230,24 @@ else()
     add_definitions(-m32)
 endif()
 
-if(USING_BOOST_LIBRARY)
-    foreach(temp ${BOOST_LIB_COMPONENTS_LITERAL})
-        add_definitions(-l:${temp})
-    endforeach(temp)
-endif()
+if(NOT USE_CLANG)
+    if(USING_BOOST_LIBRARY)
+        foreach(temp ${BOOST_LIB_COMPONENTS_LITERAL})
+            add_definitions(-l${temp})
+        endforeach(temp)
+    endif()
 
-if(USING_NCURSES_LIBRARY)
-    foreach(temp2 ${NCURSES_LIB_COMPONENTS_LITERAL})
-        add_definitions(-l:${temp2})
-    endforeach(temp2)
-endif()
+    if(USING_NCURSES_LIBRARY)
+        foreach(temp2 ${NCURSES_LIB_COMPONENTS_LITERAL})
+            add_definitions(-l${temp2})
+        endforeach(temp2)
+    endif()
 
-if(USING_ADDITIONAL_LIBS)
-    foreach(temp1 ${ADDITIONAL_LIB_COMPONENTS_LITERAL})
-        add_definitions(-l:${temp1})
-    endforeach(temp1)
+    if(USING_ADDITIONAL_LIBS)
+        foreach(temp1 ${ADDITIONAL_LIB_COMPONENTS_LITERAL})
+            add_definitions(-l${temp1})
+        endforeach(temp1)
+    endif()
 endif()
 
 add_mthread()

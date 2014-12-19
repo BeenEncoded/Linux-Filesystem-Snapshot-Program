@@ -63,7 +63,7 @@ namespace settings
         bool operator==(const setting_constants_data&) const noexcept;
         bool operator!=(const setting_constants_data&) const noexcept;
         
-        std::string snapshot_folder, records_folder;
+        std::string snapshot_folder, records_folder, settings_folder;
     } setting_constants_data;
     
     /** Program settings */

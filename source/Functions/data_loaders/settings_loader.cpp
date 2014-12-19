@@ -77,12 +77,12 @@ namespace settings
         using settings::settings_data;
         
         std::ofstream out;
-        std::string file(settings_file(s.global.snapshot_folder));
+        std::string file(settings_file(s.global.settings_folder));
         
-        if(!is_folder(s.global.snapshot_folder).value)
+        if(!is_folder(s.global.settings_folder).value)
         {
             fsys::result_data_boolean tempres;
-            if(is_symlink(s.global.snapshot_folder).value)
+            if(is_symlink(s.global.settings_folder).value)
             {
                 if(!common::inp::is_sure("This folder exists as a symlink!  Would you like \
 to delete it?"))
@@ -90,20 +90,20 @@ to delete it?"))
                     center_message("Unable to save your settings: folder exists as a symlink!");
                     return false;
                 }
-                tempres = fsys::fdelete(s.global.snapshot_folder);
+                tempres = fsys::fdelete(s.global.settings_folder);
                 if(!tempres.value)
                 {
                     center_message("Error deleting the symlink: \"" + tempres.error + 
                             "\"");
                     return false;
                 }
-                if(is_folder(s.global.snapshot_folder).value || is_symlink(s.global.snapshot_folder).value)
+                if(is_folder(s.global.settings_folder).value || is_symlink(s.global.settings_folder).value)
                 {
                     center_message("Error: Delete reports false positive!  Can not create the folder.");
                     return false;
                 }
             }
-            tempres = fsys::create_folder(s.global.snapshot_folder);
+            tempres = fsys::create_folder(s.global.settings_folder);
             if(!tempres.value)
             {
                 center_message("Could not create the folder: \"" + tempres.error + "\"");

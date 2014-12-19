@@ -56,10 +56,6 @@ namespace scrollDisplay
                     wind(),
                     pos()
         {
-            if(&d == NULL)
-            {
-                ethrow("Can not initialize scroll display with null pointer!");
-            }
         }
         
         ~scroll_display_class(){}
@@ -124,32 +120,20 @@ namespace scrollDisplay
         {
             assert(this->display != NULL);
             signed long temp(this->wind.beg + (this->wind.size - 1));
-            switch(this->display->size() > 0)
+            if(this->display->size() > 0)
             {
-                case true:
+                if(temp > 0)
                 {
-                    if(temp > 0)
-                    {
-                        if(unsigned(temp) >= this->display->size()) temp = (this->display->size() - 1);
-                    }
-                    if(temp < this->wind.beg)
-                    {
-                        throw "Error:  signed long end_pos() const (end_pos < wind.begin)!!!";
-                    }
+                    if(unsigned(temp) >= this->display->size()) temp = (this->display->size() - 1);
                 }
-                break;
-                
-                case false:
+                if(temp < this->wind.beg)
                 {
-                    temp = (-1);
+                    throw "Error:  signed long end_pos() const (end_pos < wind.begin)!!!";
                 }
-                break;
-                
-                default:
-                {
-                    temp = (-1);
-                }
-                break;
+            }
+            else
+            {
+                temp = (-1);
             }
             return temp;
         }
@@ -195,8 +179,7 @@ namespace scrollDisplay
     };
     
     //explitic instantiations for window_data_class go here:
-    template class window_data_class<settings::regex_data>;
-    template class window_data_class<std::string>;
+    
     
 }
 

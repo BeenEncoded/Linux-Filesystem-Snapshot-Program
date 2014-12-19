@@ -31,7 +31,6 @@ namespace
     std::string display_time(const tdata::time_class&);
     void diff_snapshots(const menu_data&, const snapshot::snapshot_data&, const snapshot::snapshot_data&);
     bool create_folder(const std::string&);
-    std::string record_folder(const std::string&);
     void load_all_headers(menu_data&);
     std::vector<std::string> difference_between(const std::unordered_set<std::string>&, 
                     const std::unordered_set<std::string>&);
@@ -78,7 +77,7 @@ namespace
     }
     
     /** shows the man page on regular expressions: */
-    inline void man_regex()
+    __attribute__((unused)) inline void man_regex()
     {
         using std::cout;
         using std::endl;
@@ -251,14 +250,6 @@ namespace
         return temps;
     }
 
-    /** Returns the full path of the record folder given the snapshot
-     * folder being used.  Not as functional as it is asthetic (in the code). */
-    inline std::string record_folder(const std::string& folder)
-    {
-        return std::string(folder + fsys::pref_slash() + 
-                        std::string("records"));
-    }
-    
     inline bool create_folder(const std::string& folder)
     {
         using fsys::is_folder;
@@ -520,7 +511,7 @@ namespace snapshot_menu
             cout<< " c -  Compare snaps"<< endl;
             cout<< " s -  Settings"<< endl;
             cout<< " \\ -  clear selection"<< endl;
-            cout<< " e -  Exit";
+            cout<< " [BCKSPC] -  Done";
             cout.flush();
             
             ch = common::gkey_funct();
@@ -528,52 +519,50 @@ namespace snapshot_menu
             if(key_code::is_listed_control(ch))
             {
                 if(ch == key_code::keys[key_code::code::f5::value]) display_help();
-                if(!display.empty())
+                //block for containment of key_code::code namespace
                 {
-                    //block for containment of key_code::code namespace
-                    {
-                        using key_code::keys;
-                        using namespace key_code::code;
+                    using key_code::keys;
+                    using namespace key_code::code;
 
-                        if(ch == keys[up::value]) window.mv_up();
-                        else if(ch == keys[down::value]) window.mv_down();
-                        else if(ch == keys[pgup::value]) window.pg_up();
-                        else if(ch == keys[pgdown::value]) window.pg_down();
-                        else if(ch == keys[home::value]) while(window.pg_up());
-                        else if(ch == keys[end::value]) while(window.pg_down());
-                        else if(ch == keys[del::value])
+                    if(ch == keys[up::value]) window.mv_up();
+                    else if(ch == keys[backspace::value]) finished = true;
+                    else if(ch == keys[down::value]) window.mv_down();
+                    else if(ch == keys[pgup::value]) window.pg_up();
+                    else if(ch == keys[pgdown::value]) window.pg_down();
+                    else if(ch == keys[home::value]) while(window.pg_up());
+                    else if(ch == keys[end::value]) while(window.pg_down());
+                    else if(ch == keys[del::value])
+                    {
+                        if(!data.snapshots.empty())
                         {
-                            if(!data.snapshots.empty())
-                            {
-                                if(common::inp::is_sure("Do you really want to \
+                            if(common::inp::is_sure("Do you really want to \
 delete the snapshot taken on " + display_time(data.snapshots.at(window.gpos().whole).timestamp) + "?"))
+                            {
+                                //some user feedback for those with slow computers:
+                                common::cls();
+                                for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
+                                common::center("Please wait while I delete the snapshot...");
+                                cout.flush();
+                                
+                                //only erase the snapshot from the list if we successfully delete the associated file:
+                                if(remove_snapshot(data, data.snapshots.at(window.gpos().whole).id))
                                 {
-                                    //some user feedback for those with slow computers:
-                                    common::cls();
-                                    for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
-                                    common::center("Please wait while I delete the snapshot...");
-                                    cout.flush();
-                                    
-                                    //only erase the snapshot from the list if we successfully delete the associated file:
-                                    if(remove_snapshot(data, data.snapshots.at(window.gpos().whole).id))
+                                    if(data.ids.find(data.snapshots.at(window.gpos().whole).id) == data.ids.end())
                                     {
-                                        if(data.ids.find(data.snapshots.at(window.gpos().whole).id) == data.ids.end())
-                                        {
-                                            ethrow("Error: Removal of non-existent element attempted!");
-                                        }
-                                        data.ids.erase(data.ids.find(data.snapshots.at(window.gpos().whole).id));
-                                        data.snapshots.erase(data.snapshots.begin() + window.gpos().whole);
-                                        selection.clear();
+                                        ethrow("Error: Removal of non-existent element attempted!");
                                     }
-                                    
-                                    common::cls();
-                                    for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
-                                    common::center("DONE!");
-                                    cout.flush();
+                                    data.ids.erase(data.ids.find(data.snapshots.at(window.gpos().whole).id));
+                                    data.snapshots.erase(data.snapshots.begin() + window.gpos().whole);
+                                    selection.clear();
                                 }
+                                
+                                common::cls();
+                                for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
+                                common::center("DONE!");
+                                cout.flush();
                             }
-                            update_display();
                         }
+                        update_display();
                     }
                 }
             }
@@ -652,12 +641,6 @@ delete the snapshot taken on " + display_time(data.snapshots.at(window.gpos().wh
                                 if(!selection.is_selected(window.gpos().whole) && (selection.gselection().size() < 2)) selection.add(window.gpos().whole);
                                 else if(selection.is_selected(window.gpos().whole)) selection.remove(window.gpos().whole);
                             }
-                        }
-                        break;
-                        
-                        case 'e':
-                        {
-                            if(!finished) finished = true;
                         }
                         break;
                         

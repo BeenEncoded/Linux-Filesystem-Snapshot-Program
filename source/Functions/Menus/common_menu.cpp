@@ -19,7 +19,6 @@ namespace
     void display_element(const std::string&, const bool&, const bool&);
     void display_top_border(scrollDisplay::scroll_display_class&);
     void display_bottom_border(scrollDisplay::scroll_display_class&, const unsigned int&);
-    void display_multiselect_element(const std::string&, const bool&, const bool&);
     
     
     inline void display_element(const std::string& s, const bool& selected, 
@@ -34,22 +33,6 @@ namespace
         
         if(selected) cout<< "]";
         if(special_selected) cout<< "<";
-    }
-    
-    inline void display_multiselect_element(const std::string& s, const bool& selected, const bool& multiselected)
-    {
-        if(multiselected) cout<< ">";
-        else cout<< " ";
-        
-        if(selected) cout<< "[";
-        else cout<< " ";
-        
-        cout<< s;
-        
-        if(selected) cout<< "]";
-        else cout<< " ";
-        
-        if(multiselected) cout<< "<";
     }
     
     inline void display_top_border(scrollDisplay::scroll_display_class& win)

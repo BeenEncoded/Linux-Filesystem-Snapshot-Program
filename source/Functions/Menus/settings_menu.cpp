@@ -360,7 +360,7 @@ namespace menu
                             case '1':
                             {
                                 menu_return_data tempres(modify_regex_settings(settings.regex_settings));
-                                if(tempres.modified) result.modified = true;
+                                if(tempres.modified && !tempres.canceled) result.modified = true;
                             }
                             break;
                             
