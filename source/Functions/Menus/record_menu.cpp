@@ -137,7 +137,7 @@ namespace menu
         
         window.win().window_size() = common_menu::wsize::value;
         
-        do
+        while(!finished && !record_files.empty())
         {
             common::cls();
             cout<< endl;
@@ -151,8 +151,6 @@ namespace menu
             cout<< " [BCKSPC] -  Done"<< endl;
             cout<< " [ENTR] -  View Record"<< endl;
             
-            /** cur_pos
-             * make it so that this menu exits when there are no records left */
             ch = common::gkey_funct();
             if(key_code::is_listed_control(ch))
             {
@@ -253,7 +251,14 @@ all snapshot comparison records?  This can not be undone!"))
                     }
                 }
             }
-        }while(!finished);
+        }
+        if(record_files.empty())
+        {
+            common::cls();
+            cout<< std::string(v_center::value, '\n');
+            common::center("There are no snapshot comparison records to display!");
+            common::wait();
+        }
         return result;
     }
     

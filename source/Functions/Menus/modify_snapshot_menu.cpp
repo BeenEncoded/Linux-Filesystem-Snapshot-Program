@@ -491,7 +491,10 @@ namespace snapshot_menu
                                 "   root: \"" + data.snapshots[x].root + "\"");
             }
         };
-        
+        /** cur_pos remove unnecessary options;
+         *  make the menu exit when there are no snapshots left; 
+         *  move functions used to tell whether there are snapshots and records into 
+         *      common_menu;*/
         update_display();
         window.window_size() = 7;
         do

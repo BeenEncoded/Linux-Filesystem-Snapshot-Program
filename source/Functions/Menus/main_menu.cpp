@@ -18,6 +18,11 @@ namespace
 {
     bool folder_empty(const std::string&);
     bool has_contents(const std::string&);
+    std::string extension(const std::string&);
+    std::string filename(const std::string&);
+    bool records_exist(const std::string&);
+    bool snapshots_exist(const std::string&);
+    bool folder_contains_ext(const std::string&, const std::string&);
     
     
     
@@ -54,6 +59,60 @@ namespace
                 !fsys::is_symlink(folder).value);
     }
     
+    inline std::string filename(const std::string& f)
+    {
+        std::size_t pos(f.rfind(fsys::pref_slash()));
+        std::string temps(f);
+        if(pos != std::string::npos)
+        {
+            temps.erase(temps.begin(), (temps.begin() + pos + 1));
+        }
+        return temps;
+    }
+    
+    inline std::string extension(const std::string& file)
+    {
+        std::string temps(filename(file));
+        std::size_t pos(temps.rfind('.'));
+        
+        if(pos != std::string::npos)
+        {
+            temps.erase(temps.begin(), (temps.begin() + pos));
+        }
+        return temps;
+    }
+    
+    inline bool folder_contains_ext(const std::string& folder, const std::string& ext)
+    {
+        using fsys::tree_iterator_class;
+        using fsys::is_folder;
+        using fsys::is_file;
+        using fsys::is_symlink;
+        
+        if(!is_folder(folder).value || is_symlink(folder).value || is_file(folder).value) return false;
+        if(!has_contents(folder)) return false;
+        for(tree_iterator_class it(folder); !it.at_end(); ++it)
+        {
+            if(is_file(it.value()).value && !is_symlink(it.value()).value)
+            {
+                if(extension(it.value()) == ext) return true;
+            }
+        }
+        return false;
+    }
+    
+    /** Used to define how the program tells whether records exist. */
+    inline bool records_exist(const std::string& rfolder)
+    {
+        return folder_contains_ext(rfolder, ".txt");
+    }
+    
+    /** Used to define how the program tells whether snapshots exist. */
+    inline bool snapshots_exist(const std::string& folder)
+    {
+        return folder_contains_ext(folder, fsyssnap_SNAPSHOT_FILE_EXTENSION);
+    }
+    
     
 }
 
@@ -84,14 +143,14 @@ namespace menu
             cout<< std::string(4, '\n');
             cout.flush();
             
-            if(has_contents(*snapshot_folder))
+            if(snapshots_exist(*snapshot_folder))
             {
                 cout<< "M -  Manage Snapshots";
             }
             cout<< endl;
             cout<< "T -  Take new Snapshot"<< endl;
             cout<< "S -  Settings"<< endl;
-            if(has_contents(*record_folder))
+            if(records_exist(*record_folder))
             {
                 cout<< "R -  Manage comparison records";
             }
@@ -141,7 +200,7 @@ namespace menu
                         
                         case 'm':
                         {
-                            if(has_contents(*snapshot_folder))
+                            if(snapshots_exist(*snapshot_folder))
                             {
                                 common_menu::menu_return_data tempres(snapshot_menu::main_snapshot_menu(psettings));
                                 if(tempres.modified && !tempres.canceled)
@@ -154,7 +213,7 @@ namespace menu
                         
                         case 'r':
                         {
-                            if(has_contents(*record_folder))
+                            if(records_exist(*record_folder))
                             {
                                 common_menu::menu_return_data tempres(menu::manage_records(psettings));
                                 if(tempres.modified && !tempres.canceled)
