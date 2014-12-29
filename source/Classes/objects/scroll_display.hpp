@@ -178,9 +178,6 @@ namespace scrollDisplay
         
     };
     
-    //explitic instantiations for window_data_class go here:
-    
-    
 }
 
 

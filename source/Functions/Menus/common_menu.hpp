@@ -1,6 +1,7 @@
 #ifndef MENU_GLOBALS_HPP_INCLUDED
 #define MENU_GLOBALS_HPP_INCLUDED
 #include <unordered_set>
+#include <string>
 
 #include "scroll_display.hpp"
 #include "global_defines.hpp"
@@ -19,6 +20,9 @@ namespace common_menu
     void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&);
     void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&,
                     const selection_class&);
+    bool records_exist(const std::string&);
+    bool snapshots_exist(const std::string&);
+    
     
     namespace snapshot
     {

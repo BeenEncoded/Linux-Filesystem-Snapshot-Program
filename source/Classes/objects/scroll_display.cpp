@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "scroll_display.hpp"
+#include "snapshot_class.hpp"
 #include "global_defines.hpp"
 
 namespace
@@ -341,6 +342,7 @@ namespace scrollDisplay
         this->update_display(*(this->data), this->display);
     }
     
+    template class window_data_class<snapshot::snapshot_data>;
     template class window_data_class<settings::regex_data>;
     template class window_data_class<std::string>;
 }

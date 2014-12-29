@@ -69,9 +69,12 @@ namespace
         {
             for(tree_riterator_class it(p); !it.at_end(); ++it)
             {
-                if(file_extension(it.value()) == ext)
+                if(fsys::is_file(it.value()).value && !fsys::is_symlink(it.value()).value)
                 {
-                    snapshot_files.push_back(it.value());
+                    if(file_extension(it.value()) == ext)
+                    {
+                        snapshot_files.push_back(it.value());
+                    }
                 }
             }
         }

@@ -5,9 +5,10 @@
 #include "common_menu.hpp"
 #include "program_settings.hpp"
 
-namespace snapshot_menu
+namespace menu
 {
-    common_menu::menu_return_data main_snapshot_menu(settings::settings_data&);
+    common_menu::menu_return_data manage_snapshots(settings::settings_data&);
+    
     
 }
 
