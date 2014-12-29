@@ -1,7 +1,0 @@
-//todo
--  Add option to open a new snapshot comparison with an editor of choice:
-        *  Settings: 
-                    choose editor;
-        
-        * after a comparison ask the user whether they would like to open the 
-        comparison.
