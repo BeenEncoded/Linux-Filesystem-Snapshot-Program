@@ -1,6 +1,5 @@
 
 
-#include "snapshot_file_loader.hpp"
 #include "main_menu.hpp"
 #include "program_settings.hpp"
 #include "settings_loader.hpp"

@@ -17,6 +17,7 @@ namespace
     std::string file_ext(const std::string&);
     std::vector<std::string> paths_of_ext(const std::string&, const std::string&);
     std::vector<fsys::result_data_boolean> delete_folder(const std::string&);
+    bool match_fres(const fsys::result_data_boolean&);
     
     
     
@@ -142,14 +143,15 @@ namespace menu
             common::cls();
             cout<< endl;
             common::center("Record Management");
-            cout<< std::string(4, '\n');
+            cout<< std::string(2, '\n');
             cout.flush();
             common_menu::display_scroll_window(window.win(), record_files.size());
             cout<< endl<< endl;
             cout<< " [del] -  Delete record"<< endl;
             cout<< " a -  Delete All records"<< endl;
             cout<< " [BCKSPC] -  Done"<< endl;
-            cout<< " [ENTR] -  View Record"<< endl;
+            cout<< " [ENTR] -  View Record";
+            cout.flush();
             
             ch = common::gkey_funct();
             if(key_code::is_listed_control(ch))

@@ -27,9 +27,9 @@ namespace
         common::cls();
         cout<< endl;
         cout<< "This program was compiled on "<< __DATE__<< " at "<< __TIME__<< endl;
-        cout<< std::string(4, '\n');
+        cout<< std::string(2, '\n');
         cout<< "Written by Jonathan Whitlock"<< endl;
-        cout<< std::string(3, '\n');
+        cout<< std::string(1, '\n');
         cout<< "This program is meant to be used for administrative purposes.  \
 It was made in order to keep track of paths that are created and deleted on \
 a filesystem.  This is good for things like recording what files are created \
@@ -37,8 +37,8 @@ during an installation process, or uninstallation process.  For those purposes, 
 regular expression filtering can be used.  Note that this filtering will only \
 filter results of a comparison, not the actual snapshot process, so if you want \
 to, you may change the filter settings and re-perform a comparison on the same \
-\"snapshots\" and get accorded results.  For each comparison, a record is saved.  \
-These records are stored in plain text files and can be managed from the mian \
+\"snapshots\" and receive accorded results.  For each comparison, a record is saved.  \
+These records are stored in plain text files and can be managed from the main \
 menu once there is more than one record to view.  You may choose the editor you \
 view these records in through the settings menu.";
         cout<< endl;

@@ -187,7 +187,7 @@ namespace
     }
     
     /** Removes a snapshot's file. */
-    inline bool remove_snapshot(const menu_data& data, const unsigned long long& id)
+    inline bool remove_snapshot(const menu_data& data, const unsigned long long& id) //test
     {
         using fsys::is_file;
         using fsys::is_folder;
@@ -226,7 +226,7 @@ namespace
         return temps;
     }
 
-    inline bool create_folder(const std::string& folder)
+    inline bool create_folder(const std::string& folder) //test
     {
         using fsys::is_folder;
         using fsys::is_file;
@@ -241,7 +241,7 @@ namespace
     
     /** Returns a vector of strings containing the elements found in bef, but not in aft. */
     inline std::vector<std::string> difference_between(const std::unordered_set<std::string>& bef, 
-                    const std::unordered_set<std::string>& aft)
+                    const std::unordered_set<std::string>& aft) //test
     {
         std::vector<std::string> diff;
         for(std::unordered_set<std::string>::const_iterator it = bef.begin(); it != bef.end(); ++it)
@@ -283,7 +283,7 @@ namespace
     }
     
     inline bool match_settings(const std::string& s, 
-            const std::pair<std::vector<settings::regex_data>, std::vector<settings::regex_data> >& filter)
+            const std::pair<std::vector<settings::regex_data>, std::vector<settings::regex_data> >& filter) //test
     {
         using settings::regex_data;
         
@@ -306,8 +306,9 @@ namespace
     
     /** Finds the created and deleted paths between two snapshots. */
     inline void diff_snapshots(const menu_data& data, const snapshot::snapshot_data& snap1, 
-                    const snapshot::snapshot_data& snap2)
+                    const snapshot::snapshot_data& snap2) //test
     {
+        //todo seperate this function into saveing/comparing
         using std::cout;
         using std::endl;
         using fsys::is_file;
@@ -393,7 +394,7 @@ namespace
     
     /** Loads all headers, as well as ids, into menu_data. This function also
      * sorts the snapshots. */
-    inline void load_all_headers(menu_data& data)
+    inline void load_all_headers(menu_data& data) //test
     {
         using fsys::is_folder;
         using fsys::is_symlink;
@@ -471,7 +472,7 @@ namespace menu
             common::cls();
             cout<< endl;
             common::center("Manage snapshots: ");
-            cout<< std::string(4, '\n');
+            cout<< std::string(2, '\n');
             common_menu::display_scroll_window(win.win(), data.snapshots.size(), selection);
             cout<< endl;
             if(!selection.gselection().empty()) cout<< " '\\' -  Clear selection";
@@ -479,7 +480,8 @@ namespace menu
             cout<< " [DEL] ----  Delete Snapshot"<< endl;
             cout<< " [SPC] ----  Select Snapshot (for comparison)"<< endl;
             cout<< " [ENTR] ---  Compare selected snapshots"<< endl;
-            cout<< " [BCKSPC] -  Return to Main Menu"<< endl;
+            cout<< " [BCKSPC] -  Return to Main Menu";
+            cout.flush();
             key = common::gkey_funct();
             
             if(key_code::is_listed_control(key))
