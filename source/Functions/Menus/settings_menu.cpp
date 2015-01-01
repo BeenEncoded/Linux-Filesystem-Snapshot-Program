@@ -66,6 +66,7 @@ namespace menu
         menu_return_data result;
         key_code_data key;
         
+        window.win().window_size() = common_menu::wsize::value;
         do
         {
             common::cls();
@@ -74,8 +75,9 @@ namespace menu
             cout<< std::string(4, '\n');
             cout.flush();
             common_menu::display_scroll_window(window.win(), regex_list.size());
-            cout<< std::string(3, '\n');
-            cout<< "[BCKSPC] - Done  |  [n] - new expression  |  [T] - Toggle enabled  |  [ENTR] - Modify Expression"<< endl;
+            cout<< std::string(2, '\n');
+            cout<< "[BCKSPC] - Done  |  [n] - new expression\n";
+            cout<< "[T] - Toggle enabled  |  [ENTR] - Modify Expression"<< endl;
             
             key = common::gkey_funct();
             if(key_code::is_listed_control(key))
@@ -86,8 +88,8 @@ namespace menu
                 if(key == keys[backspace::value]) finished = true;
                 else if(key == keys[up::value]) window.win().mv_up();
                 else if(key == keys[down::value]) window.win().mv_down();
-                else if(key == keys[pgdown::value]) window.win().pg_up();
-                else if(key == keys[pgup::value]) window.win().pg_down();
+                else if(key == keys[pgdown::value]) window.win().pg_down();
+                else if(key == keys[pgup::value]) window.win().pg_up();
                 else if(key == keys[home::value]) while(window.win().pg_up());
                 else if(key == keys[end::value]) while(window.win().pg_down());
                 else if(key == keys[del::value])
