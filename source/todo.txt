@@ -1,3 +1,0 @@
-//todo
--  resize regex_settings menu so that it can be viewed more easily in
-    smaller terminals;
