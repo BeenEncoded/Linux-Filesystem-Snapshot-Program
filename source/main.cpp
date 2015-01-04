@@ -19,29 +19,6 @@ namespace
         menu::main_menu(program_settings);
     }
     
-    inline settings::settings_data load_settings(const std::string& folder)
-    {
-        using fsys::is_folder;
-        using fsys::is_file;
-        using fsys::is_symlink;
-        using fsys::pref_slash;
-        
-        std::string file(folder + pref_slash() + std::string("settings.dat"));
-        settings::settings_data program_settings;
-        
-        if(is_folder(folder).value && !is_symlink(folder).value)
-        {
-            if(is_file(file).value)
-            {
-                std::ifstream in(file.c_str(), std::ios::in);
-                if(in.good()) in>> program_settings;
-                else ethrow("Error: can not load the settings file!"); //this shouldn't happen.  If it does, there's somthing wrong.
-                in.close();
-            }
-        }
-        return program_settings;
-    }
-    
     
 }
 
