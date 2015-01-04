@@ -87,12 +87,6 @@ namespace test
     
     inline bool snapshot_header_eq(const snapshot::snapshot_data& s1, const snapshot::snapshot_data& s2)
     {
-        if(s1.id == s2.id)
-        {
-            s1.root == s2.root;
-        }
-        s1.timestamp == s2.timestamp;
-        s1.root == s2.root;
         return (
                     (s1.id == s2.id) && 
                     (s1.root == s2.root) && 

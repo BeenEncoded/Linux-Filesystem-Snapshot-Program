@@ -5,6 +5,7 @@
 #include "settings_menu.hpp"
 #include "program_settings.hpp"
 #include "scroll_display.hpp"
+#include "filesystem.hpp"
 #include "common_menu.hpp"
 #include "common.hpp"
 #include "global_defines.hpp"
@@ -15,7 +16,8 @@ namespace
             std::vector<std::string>&);
     
     
-    
+    /** Takes a list of regex settings and constructs a list of strings
+     * suitable for display within a menu. */
     inline void regex_list_display(const std::vector<settings::regex_data>& data, 
                     std::vector<std::string>& display)
     {
@@ -64,6 +66,7 @@ namespace menu
         menu_return_data result;
         key_code_data key;
         
+        window.win().window_size() = common_menu::wsize::value;
         do
         {
             common::cls();
@@ -72,8 +75,9 @@ namespace menu
             cout<< std::string(4, '\n');
             cout.flush();
             common_menu::display_scroll_window(window.win(), regex_list.size());
-            cout<< std::string(3, '\n');
-            cout<< "[BCKSPC] - Done  |  [n] - new expression  |  [T] - Toggle enabled  |  [ENTR] - Modify Expression"<< endl;
+            cout<< std::string(2, '\n');
+            cout<< "[BCKSPC] - Done  |  [n] - new expression\n";
+            cout<< "[T] - Toggle enabled  |  [ENTR] - Modify Expression"<< endl;
             
             key = common::gkey_funct();
             if(key_code::is_listed_control(key))
@@ -84,8 +88,8 @@ namespace menu
                 if(key == keys[backspace::value]) finished = true;
                 else if(key == keys[up::value]) window.win().mv_up();
                 else if(key == keys[down::value]) window.win().mv_down();
-                else if(key == keys[pgdown::value]) window.win().pg_up();
-                else if(key == keys[pgup::value]) window.win().pg_down();
+                else if(key == keys[pgdown::value]) window.win().pg_down();
+                else if(key == keys[pgup::value]) window.win().pg_up();
                 else if(key == keys[home::value]) while(window.win().pg_up());
                 else if(key == keys[end::value]) while(window.win().pg_down());
                 else if(key == keys[del::value])
@@ -296,6 +300,7 @@ namespace menu
             common::center("Program Settings");
             cout<< std::string(4, '\n');
             cout<< " 1 -  Regular Expression Settings ("<< (settings.regex_settings.use_regex ? "ON" : "OFF")<< ")"<< endl;
+            cout<< " 2 -  Editor: \""<< settings.editor<< "\""<< endl;
             cout<< endl;
             cout<< " c -  Cancel"<< endl;
             cout<< " [BCKSPCE] -  Done"<< endl;
@@ -314,7 +319,36 @@ namespace menu
                             case '1':
                             {
                                 menu_return_data tempres(modify_regex_settings(settings.regex_settings));
-                                if(tempres.modified) result.modified = true;
+                                if(tempres.modified && !tempres.canceled) result.modified = true;
+                            }
+                            break;
+                            
+                            case '2':
+                            {
+                                std::string temps(common::inp::get_user_string(
+                                        "(enter nothing to not use an editor)\n\nEditor currently set to: \"" + settings.editor + 
+                                        "\"\n\n\nEnter the path of your favorite text editor: "));
+                                if(temps != GSTRING_CANCEL)
+                                {
+                                    if((fsys::is_file(temps).value && 
+                                            !fsys::is_symlink(temps).value) ||
+                                            temps.empty())
+                                    {
+                                        settings.editor = temps;
+                                        if(!result.modified) result.modified = true;
+                                    }
+                                    else
+                                    {
+                                        common::cls();
+                                        cout<< std::string(v_center::value, '\n');
+                                        common::center("You must enter a valid path!");
+                                        cout.flush();
+                                        common::wait();
+                                        common::cls();
+                                        cout<< "please wait...";
+                                        cout.flush();
+                                    }
+                                }
                             }
                             break;
                             

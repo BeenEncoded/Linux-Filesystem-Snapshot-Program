@@ -10,6 +10,7 @@ namespace settings
     typedef struct settings_data settings_data;
     typedef struct regex_data regex_data;
     typedef struct regex_settings_data regex_settings_data;
+    typedef struct setting_constants_data setting_constants_data;
     
     std::istream& operator>>(std::istream&, regex_data&);
     std::ostream& operator<<(std::ostream&, const regex_data&);
@@ -51,6 +52,20 @@ namespace settings
         std::vector<regex_data> match, not_match;
     } regex_settings_data;
     
+    /** Defines global program constants such as folders, etc... */
+    typedef struct setting_constants_data
+    {
+        //modify the constructor's initializer to change the values.
+        explicit setting_constants_data() noexcept;
+        ~setting_constants_data() noexcept;
+        
+        setting_constants_data& operator=(const setting_constants_data&) noexcept;
+        bool operator==(const setting_constants_data&) const noexcept;
+        bool operator!=(const setting_constants_data&) const noexcept;
+        
+        std::string snapshot_folder, records_folder, settings_folder;
+    } setting_constants_data;
+    
     /** Program settings */
     typedef struct settings_data
     {
@@ -62,6 +77,8 @@ namespace settings
         bool operator!=(const settings_data&) const noexcept;
         
         regex_settings_data regex_settings;
+        std::string editor;
+        const setting_constants_data global;
     } settings_data;
     
     

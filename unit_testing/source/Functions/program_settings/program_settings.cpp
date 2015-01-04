@@ -10,11 +10,11 @@
 #include "global_defines.hpp"
 #include "filesystem.hpp"
 #include "common.hpp"
+#include "snapshot_file_loader.hpp"
 
 namespace
 {
     std::vector<settings::regex_data> apply_filter(const std::vector<settings::regex_data>&);
-    unsigned int available(std::istream&);
     
     
     //converts type into memory
@@ -27,7 +27,7 @@ namespace
     }
     
     template<char*>
-    char* get_mem(char*& t)
+    char* get_mem(char*& t __attribute__((unused)))
     {
         ethrow("[PROGRAMMING ERROR]: Can not convert char* to char* through memory!");
         return NULL;
@@ -43,7 +43,7 @@ namespace
     }
     
     template<char*>
-    char* from_mem(const char* ch)
+    char* from_mem(const char* ch __attribute__((unused)))
     {
         ethrow("[PROGRAMMING ERROR]: Can not convert char* to char* through memory!");
         return NULL;
@@ -80,14 +80,6 @@ namespace
             if(it->on) enabled.push_back(*it);
         }
         return enabled;
-    }
-    
-    inline unsigned int available(std::istream& in)
-    {
-        std::ios::pos_type pos(in.tellg());
-        unsigned int count(in.seekg(0, std::ios::end).tellg() - pos);
-        in.seekg(pos);
-        return count;
     }
     
     
@@ -260,7 +252,9 @@ namespace settings
 /** settings_data member functions: */
 namespace settings
 {
-    settings_data::settings_data() noexcept : regex_settings()
+    settings_data::settings_data() noexcept : regex_settings(),
+            editor(),
+            global()
     {
     }
     
@@ -268,6 +262,7 @@ namespace settings
     {
         if(this != &s)
         {
+            this->editor = s.editor;
             this->regex_settings = s.regex_settings;
         }
         return *this;
@@ -275,18 +270,26 @@ namespace settings
     
     bool settings_data::operator==(const settings_data& s) const noexcept
     {
-        return (this->regex_settings == s.regex_settings);
+        return ((this->regex_settings == s.regex_settings) && 
+                (this->global == s.global) && 
+                (this->editor == s.editor));
     }
     
     bool settings_data::operator!=(const settings_data& s) const noexcept
     {
-        return (this->regex_settings != s.regex_settings);
+        return ((this->regex_settings != s.regex_settings) ||
+                (this->global != s.global) || 
+                (this->editor != s.editor));
     }
     
     std::ostream& operator<<(std::ostream& out, const settings_data& s)
     {
         //test
-        out<< s.regex_settings;
+        if(out.good())
+        {
+            out<< s.regex_settings;
+            out<< s.editor<< mem_delim::value;
+        }
         return out;
     }
     
@@ -298,8 +301,51 @@ namespace settings
         if(in.good())
         {
             in>> s.regex_settings;
+            common::safe_getline(in, s.editor, mem_delim::value);
         }
         return in;
+    }
+    
+    
+}
+
+/** setting_constants_data member functions: */
+namespace settings
+{
+    setting_constants_data::setting_constants_data() noexcept : 
+            snapshot_folder(snapshot::snapshot_folder() + fsys::pref_slash() + std::string("snapshots taken")),
+            records_folder(snapshot_folder + fsys::pref_slash() + std::string("comparison records")),
+            settings_folder(snapshot::snapshot_folder())
+    {
+    }
+    
+    setting_constants_data::~setting_constants_data() noexcept
+    {
+    }
+    
+    setting_constants_data& setting_constants_data::operator=(const setting_constants_data& s) noexcept
+    {
+        if(this != &s)
+        {
+            this->snapshot_folder = s.snapshot_folder;
+            this->records_folder = s.records_folder;
+            this->settings_folder = s.settings_folder;
+        }
+        return *this;
+    }
+    
+    bool setting_constants_data::operator==(const setting_constants_data& s) const noexcept
+    {
+        return ((this->snapshot_folder == s.snapshot_folder) && 
+                (this->records_folder == s.records_folder) && 
+                (this->settings_folder == s.settings_folder));
+    }
+    
+    bool setting_constants_data::operator!=(const setting_constants_data& s) const noexcept
+    {
+        return ((this->snapshot_folder != s.snapshot_folder) || 
+                (this->records_folder != s.records_folder) ||
+                (this->settings_folder != s.settings_folder));
     }
     
     

@@ -22,7 +22,6 @@ namespace
 {
     string file_extension(const std::string&);
     bool load_id(const std::string&, unsigned long long&);
-    std::string snapshot_path(const unsigned long long&);
     std::vector<std::string> paths_of_extension(const std::string&, const std::string&);
     
     
@@ -61,13 +60,6 @@ namespace
         return success;
     }
     
-    /* Returns the path of a snapshot given its id.*/
-    inline std::string snapshot_path(const unsigned long long& id)
-    {
-        return std::string(snapshot::snapshot_folder() + pref_slash() + std::string("snapshot") + 
-                        std::to_string(id) + std::string(fsyssnap_SNAPSHOT_FILE_EXTENSION));
-    }
-    
     /** Finds a all the paths in a folder that end in a specified extension. */
     inline std::vector<string> paths_of_extension(const string& p, const string& ext)
     {
@@ -77,9 +69,12 @@ namespace
         {
             for(tree_riterator_class it(p); !it.at_end(); ++it)
             {
-                if(file_extension(it.value()) == ext)
+                if(fsys::is_file(it.value()).value && !fsys::is_symlink(it.value()).value)
                 {
-                    snapshot_files.push_back(it.value());
+                    if(file_extension(it.value()) == ext)
+                    {
+                        snapshot_files.push_back(it.value());
+                    }
                 }
             }
         }
