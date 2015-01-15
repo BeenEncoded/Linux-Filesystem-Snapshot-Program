@@ -61,7 +61,7 @@ namespace
         cout<< endl;
     }
     
-    inline std::string filename(const std::string& f) //test
+    inline std::string filename(const std::string& f)
     {
         std::size_t pos(f.rfind(fsys::pref_slash()));
         std::string temps(f);
@@ -72,7 +72,7 @@ namespace
         return temps;
     }
     
-    inline std::string extension(const std::string& file) //test
+    inline std::string extension(const std::string& file)
     {
         std::string temps(filename(file));
         std::size_t pos(temps.rfind('.'));
@@ -84,7 +84,7 @@ namespace
         return temps;
     }
     
-    inline bool folder_contains_ext(const std::string& folder, const std::string& ext) //test
+    inline bool folder_contains_ext(const std::string& folder, const std::string& ext)
     {
         using fsys::tree_iterator_class;
         using fsys::is_folder;
