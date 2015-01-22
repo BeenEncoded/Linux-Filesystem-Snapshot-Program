@@ -303,7 +303,7 @@ namespace
     
     /** Loads all headers, as well as ids, into menu_data. This function also
      * sorts the snapshots. */
-    inline void load_all_headers(menu_data& data) //test
+    inline void load_all_headers(menu_data& data)
     {
         using fsys::is_folder;
         using fsys::is_symlink;
@@ -388,7 +388,7 @@ namespace
         
         /** Finds the created and deleted paths between two snapshots. */
         inline void diff_snapshots(const menu_data& data, const snapshot::snapshot_data& snap1, 
-                        const snapshot::snapshot_data& snap2) //test
+                        const snapshot::snapshot_data& snap2)
         {
             using std::cout;
             using std::endl;
@@ -404,26 +404,17 @@ namespace
             
             std::unordered_set<std::string> paths_before, paths_after;
             std::string temps;
-            snapshot::snapshot_data before, after;
+            snapshot::snapshot_data const *before(((snap1.timestamp < snap2.timestamp) ? &snap2 : &snap1)), 
+                    *after(((snap1.timestamp < snap2.timestamp) ? &snap1 : &snap2));
             std::ofstream out;
             
-            if((data.ids.find(before.id) != data.ids.end()) && 
-                            (data.ids.find(after.id) != data.ids.end()) && 
+            if((data.ids.find(before->id) != data.ids.end()) && 
+                            (data.ids.find(after->id) != data.ids.end()) && 
                             create_folder(data.settings->global.records_folder))
             {
-                if(snap1.timestamp <= snap2.timestamp)
-                {
-                    before = snap1;
-                    after = snap2;
-                }
-                else
-                {
-                    before = snap2;
-                    after = snap1;
-                }
                 
-                paths_before = load_paths(data.ids.find(before.id)->second);
-                paths_after = load_paths(data.ids.find(after.id)->second);
+                paths_before = load_paths(data.ids.find(before->id)->second);
+                paths_after = load_paths(data.ids.find(after->id)->second);
                 
                 temps = (data.settings->global.records_folder + fsys::pref_slash() + record_filename());
                 
@@ -431,8 +422,8 @@ namespace
                 
                 if(!out.good()) ethrow(("Out is not good! (file: \"" + temps + "\")"));
                 
-                out<< "Time frame:  "<< display_time(before.timestamp)<< " - "<< 
-                                display_time(after.timestamp)<< endl;
+                out<< "Time frame:  "<< display_time(before->timestamp)<< " - "<< 
+                                display_time(after->timestamp)<< endl;
                 
                 save_diff_result(data, difference_between(paths_before, paths_after), 
                                 out, (std::string(5, '\n') + "DELETED PATHS: "));
