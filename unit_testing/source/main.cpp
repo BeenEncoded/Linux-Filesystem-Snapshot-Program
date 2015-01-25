@@ -1,7 +1,7 @@
 #include <unittest++/UnitTest++.h>
 #include <ctime>
 
-#define TEST_ID_NUMBER_MAC 3
+#define TEST_ID_NUMBER_MAC 2
 
 #if TEST_ID_NUMBER_MAC == 1
     #include "snapshot_data_stream_operator_test_case.hpp"

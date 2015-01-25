@@ -12,6 +12,7 @@
 #include "random_junk_data.hpp"
 #include "filesystem.hpp"
 #include "global_defines.hpp"
+#include "program_settings.hpp"
 
 namespace test
 {
@@ -183,7 +184,7 @@ TEST_FIXTURE(fixture_class, retrieve_information_test_case)
     using namespace test;
     
     std::vector<snapshot::snapshot_data> tempsnap;
-    tempsnap = load_all_headers(snapshot::snapshot_folder());
+    tempsnap = load_all_headers(settings::settings_data().global.snapshot_folder);
     CHECK(snapshot_list_eq(tempsnap, snaps));
 }
 
