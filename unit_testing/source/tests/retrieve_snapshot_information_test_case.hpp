@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <exception>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 
@@ -18,7 +19,7 @@ namespace test
 {
     typedef std::unordered_map<unsigned long long, snapshot::snapshot_data> ss_hasht;
     
-    class fixture_class;
+    typedef class fixture_class fixture_class;
     
     bool save_snapshot(const snapshot::snapshot_data&);
     bool snapshot_header_eq(const snapshot::snapshot_data&, const snapshot::snapshot_data&);
@@ -29,11 +30,14 @@ namespace test
     std::vector<snapshot::snapshot_data> load_all_headers(const std::string&);
     
     
-    class fixture_class
+    typedef class fixture_class
     {
     public:
         fixture_class()
         {
+            using std::cout;
+            using std::endl;
+            
             bool tempb(true);
             snapshot::snapshot_data tempsnap;
             
@@ -43,6 +47,12 @@ namespace test
                 tempsnap.id = snapshot::new_snapshot_id();
                 tempb = save_snapshot(tempsnap);
                 if(tempb) this->snaps.push_back(tempsnap);
+                else 
+                {
+                    cout<< "Error, failed to set the test up because \
+save_snasphot failed!"<< endl;
+                    throw std::runtime_error("Test invalid!");
+                }
             }
         }
         
@@ -56,14 +66,14 @@ namespace test
         std::string filename;
         std::vector<snapshot::snapshot_data> snaps;
         
-    };
+    } fixture_class;
     
     inline bool save_snapshot(const snapshot::snapshot_data& snap)
     {
         using fsys::is_folder;
         using fsys::is_symlink;
         
-        std::string folder(snapshot::snapshot_folder());
+        std::string folder(settings::settings_data().global.snapshot_folder);
         bool success(false);
         std::ofstream out;
         
@@ -75,7 +85,7 @@ namespace test
         {
             if(snap.id != 0)
             {
-                folder = (snapshot::snapshot_folder() + fsys::pref_slash() + 
+                folder = (settings::settings_data().global.snapshot_folder + fsys::pref_slash() + 
                                 std::to_string(snap.id) + fsyssnap_SNAPSHOT_FILE_EXTENSION);
                 out.open(folder.c_str(), std::ios::binary);
                 out<< snap;
