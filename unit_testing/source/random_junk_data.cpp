@@ -50,5 +50,10 @@ namespace rand_data
         return tempsnap;
     }
     
+    bool random_bool()
+    {
+        return random_number(0, 1);
+    }
+    
     
 }

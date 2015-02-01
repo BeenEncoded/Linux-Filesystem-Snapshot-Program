@@ -16,6 +16,7 @@ namespace
         
         settings_data program_settings;
         program_settings = settings::load(program_settings.global.settings_folder);
+        
         menu::main_menu(program_settings);
     }
     

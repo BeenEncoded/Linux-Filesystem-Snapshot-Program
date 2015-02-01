@@ -27,7 +27,6 @@ namespace
     
     bool remove_snapshot(const menu_data&, const unsigned long long&);
     std::string display_time(const tdata::time_class&);
-    void diff_snapshots(const menu_data&, const snapshot::snapshot_data&, const snapshot::snapshot_data&);
     bool create_folder(const std::string&);
     void load_all_headers(menu_data&);
     std::vector<std::string> difference_between(const std::unordered_set<std::string>&, 
@@ -49,7 +48,7 @@ namespace
         settings::settings_data *settings;
     } menu_data;
     
-    /** shows the man page on regular expressions: */
+    /** shows the official gnu man page on regular expressions: */
     __attribute__((unused)) inline void man_regex()
     {
         using std::cout;
@@ -187,7 +186,7 @@ namespace
     }
     
     /** Removes a snapshot's file. */
-    inline bool remove_snapshot(const menu_data& data, const unsigned long long& id) //test
+    inline bool remove_snapshot(const menu_data& data, const unsigned long long& id)
     {
         using fsys::is_file;
         using fsys::is_folder;
@@ -226,7 +225,7 @@ namespace
         return temps;
     }
 
-    inline bool create_folder(const std::string& folder) //test
+    inline bool create_folder(const std::string& folder)
     {
         using fsys::is_folder;
         using fsys::is_file;
@@ -241,7 +240,7 @@ namespace
     
     /** Returns a vector of strings containing the elements found in bef, but not in aft. */
     inline std::vector<std::string> difference_between(const std::unordered_set<std::string>& bef, 
-                    const std::unordered_set<std::string>& aft) //test
+                    const std::unordered_set<std::string>& aft)
     {
         std::vector<std::string> diff;
         for(std::unordered_set<std::string>::const_iterator it = bef.begin(); it != bef.end(); ++it)
@@ -283,14 +282,12 @@ namespace
     }
     
     inline bool match_settings(const std::string& s, 
-            const std::pair<std::vector<settings::regex_data>, std::vector<settings::regex_data> >& filter) //test
+            const std::pair<std::vector<settings::regex_data>, std::vector<settings::regex_data> >& filter)
     {
         using settings::regex_data;
         
         if(filter.first.empty() && filter.second.empty()) return true;
         bool matched(filter.first.empty());
-        filter.first.size();
-        filter.second.size();
         for(std::vector<regex_data>::const_iterator it = filter.first.begin(); 
                 ((it != filter.first.end()) && !matched); ++it)
         {
@@ -304,97 +301,9 @@ namespace
         return matched;
     }
     
-    /** Finds the created and deleted paths between two snapshots. */
-    inline void diff_snapshots(const menu_data& data, const snapshot::snapshot_data& snap1, 
-                    const snapshot::snapshot_data& snap2) //test
-    {
-        //todo seperate this function into saveing/comparing
-        using std::cout;
-        using std::endl;
-        using fsys::is_file;
-        using fsys::is_symlink;
-        using snapshot::load_header;
-        using snapshot::snapshot_data;
-        
-        common::cls();
-        for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
-        common::center("Comparing, please wait...");
-        cout.flush();
-        
-        std::unordered_set<std::string> paths_before, paths_after;
-        tdata::time_class now;
-        std::string temps;
-        snapshot::snapshot_data before(snap1), after(snap2);
-        std::ofstream out;
-        
-        auto save_diff_result = [&data](const std::vector<std::string>& paths, 
-                        std::ofstream& out, const std::string& title)->void
-        {
-            using std::endl;
-            using settings::regex_data;
-            
-            std::pair<std::vector<regex_data>, std::vector<regex_data> > filter(settings::used_expressions(*(data.settings)));
-            
-            out<< title<< endl<< endl;
-            for(std::vector<std::string>::const_iterator it = paths.begin(); it != paths.end(); ++it)
-            {
-                if(match_settings(*it, filter)) out<< *it<< endl;
-            }
-        };
-        
-        if((data.ids.find(before.id) != data.ids.end()) && 
-                        (data.ids.find(after.id) != data.ids.end()) && 
-                        create_folder(data.settings->global.records_folder))
-        {
-            if(after.timestamp < before.timestamp)
-            {
-                std::swap(before, after);
-            }
-            paths_before = load_paths(data.ids.find(before.id)->second);
-            paths_after = load_paths(data.ids.find(after.id)->second);
-            
-            now = tdata::current_time();
-            temps = (data.settings->global.records_folder + fsys::pref_slash() + 
-                            now.month_name() + " " + std::to_string(now.mday()) + 
-                            ", " + std::to_string(now.gyear()) + "  at " + 
-                            std::to_string(now.hour()) + " " + 
-                            std::to_string(now.minute()) + " " + 
-                            std::to_string(now.second()) + ".txt");
-            
-            out.open(temps.c_str(), std::ios::out);
-            
-            if(!out.good()) ethrow(("Out is not good! (file: \"" + temps + "\")"));
-            
-            out<< "Time frame:  "<< display_time(before.timestamp)<< " - "<< 
-                            display_time(after.timestamp)<< endl;
-            
-            save_diff_result(difference_between(paths_before, paths_after), 
-                            out, (std::string(5, '\n') + "DELETED PATHS: "));
-                            
-            save_diff_result(difference_between(paths_after, paths_before), 
-                            out, (std::string(5, '\n') + "CREATED PATHS: "));
-                            
-            paths_before.erase(paths_before.begin(), paths_before.end());
-            paths_after.erase(paths_after.begin(), paths_after.end());
-            if(out.is_open()) out.close();
-        }
-        else ethrow("Can not use snapshots that are not loaded to diff!");
-        
-        if(is_file(temps).value && !is_symlink(temps).value)
-        {
-            common::cls();
-            for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
-            common::center("DONE!");
-            cout<< endl;
-            cout<< endl;
-            common::center("Records saved in: \"" + temps + "\"");
-            common::wait();
-        }
-    }
-    
     /** Loads all headers, as well as ids, into menu_data. This function also
      * sorts the snapshots. */
-    inline void load_all_headers(menu_data& data) //test
+    inline void load_all_headers(menu_data& data)
     {
         using fsys::is_folder;
         using fsys::is_symlink;
@@ -442,7 +351,106 @@ namespace
         for(unsigned int x = 0; x < size; ++x) disp.push_back(display_time(snaps[x].timestamp));
     }
     
-    
+    namespace snapshot_diff_algo
+    {
+        void diff_snapshots(const menu_data&, const snapshot::snapshot_data&, const snapshot::snapshot_data&);
+        std::string record_filename();
+        
+        
+        
+        /** returns a string representing the filename of a record file.  
+         * A record file name consists of the time and date that the file
+         * was created. */
+        inline std::string record_filename()
+        {
+            tdata::time_class now(tdata::current_time());
+            return (now.month_name() + " " + std::to_string(now.mday()) + 
+                                ", " + std::to_string(now.gyear()) + "  at " + 
+                                std::to_string(now.hour()) + " " + 
+                                std::to_string(now.minute()) + " " + 
+                                std::to_string(now.second()) + ".txt");
+        }
+        
+        inline void save_diff_result(const menu_data& data, const std::vector<std::string>& paths, 
+                std::ofstream& out, const std::string& title)
+        {
+            using std::endl;
+            using settings::regex_data;
+            
+            std::pair<std::vector<regex_data>, std::vector<regex_data> > filter(settings::used_expressions(*(data.settings)));
+            
+            out<< title<< endl<< endl;
+            for(std::vector<std::string>::const_iterator it = paths.begin(); it != paths.end(); ++it)
+            {
+                if(match_settings(*it, filter)) out<< *it<< endl;
+            }
+        }
+        
+        /** Finds the created and deleted paths between two snapshots. */
+        inline void diff_snapshots(const menu_data& data, const snapshot::snapshot_data& snap1, 
+                        const snapshot::snapshot_data& snap2)
+        {
+            using std::cout;
+            using std::endl;
+            using fsys::is_file;
+            using fsys::is_symlink;
+            using snapshot::load_header;
+            using snapshot::snapshot_data;
+            
+            common::cls();
+            for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
+            common::center("Comparing, please wait...");
+            cout.flush();
+            
+            std::unordered_set<std::string> paths_before, paths_after;
+            std::string temps;
+            snapshot::snapshot_data const *before(((snap1.timestamp < snap2.timestamp) ? &snap2 : &snap1)), 
+                    *after(((snap1.timestamp < snap2.timestamp) ? &snap1 : &snap2));
+            std::ofstream out;
+            
+            if((data.ids.find(before->id) != data.ids.end()) && 
+                            (data.ids.find(after->id) != data.ids.end()) && 
+                            create_folder(data.settings->global.records_folder))
+            {
+                
+                paths_before = load_paths(data.ids.find(before->id)->second);
+                paths_after = load_paths(data.ids.find(after->id)->second);
+                
+                temps = (data.settings->global.records_folder + fsys::pref_slash() + record_filename());
+                
+                out.open(temps.c_str(), std::ios::out);
+                
+                if(!out.good()) ethrow(("Out is not good! (file: \"" + temps + "\")"));
+                
+                out<< "Time frame:  "<< display_time(before->timestamp)<< " - "<< 
+                                display_time(after->timestamp)<< endl;
+                
+                save_diff_result(data, difference_between(paths_before, paths_after), 
+                                out, (std::string(5, '\n') + "DELETED PATHS: "));
+                                
+                save_diff_result(data, difference_between(paths_after, paths_before), 
+                                out, (std::string(5, '\n') + "CREATED PATHS: "));
+                                
+                paths_before.erase(paths_before.begin(), paths_before.end());
+                paths_after.erase(paths_after.begin(), paths_after.end());
+                if(out.is_open()) out.close();
+            }
+            else ethrow("Can not use snapshots that are not loaded to diff!");
+            
+            if(is_file(temps).value && !is_symlink(temps).value)
+            {
+                common::cls();
+                for(unsigned int x = 0; x < v_center::value; x++) cout<< endl;
+                common::center("DONE!");
+                cout<< endl;
+                cout<< endl;
+                common::center("Records saved in: \"" + temps + "\"");
+                common::wait();
+            }
+        }
+        
+        
+    }
 }
 
 namespace menu
@@ -455,6 +463,7 @@ namespace menu
         using std::cout;
         using key_code::key_code_data;
         using std::endl;
+        using snapshot_diff_algo::diff_snapshots;
         
         bool finished(false);
         menu_return_data result;
