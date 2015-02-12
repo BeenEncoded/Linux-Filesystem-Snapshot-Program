@@ -22,6 +22,9 @@ namespace
     
     
     
+    /** Tests whether the stream operators of an object work.
+     * to do this, it writes it to a string stream, and reads
+     * into a new object, then returns the result of an operator==() */
     template<class type>
     inline bool test_stream_ops(const type& t)
     {

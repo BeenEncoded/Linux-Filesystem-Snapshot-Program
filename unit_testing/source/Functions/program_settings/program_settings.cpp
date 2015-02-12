@@ -14,6 +14,12 @@
 
 namespace
 {
+    template<typename type> char* get_mem(type&);
+    template<char*> char* get_mem(char*&);
+    template<typename type> type from_mem(const char*);
+    template<char*> char* from_mem(const char*);
+    template<typename type> void out_memory_of(std::ostream&, const type&);
+    template<typename type> void in_memory_of(std::istream&, type&);
     std::vector<settings::regex_data> apply_filter(const std::vector<settings::regex_data>&);
     
     
