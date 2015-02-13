@@ -339,6 +339,7 @@ namespace snapshot
             safe_getline(in, snap.root, mem_delim::value);
         }
         in.peek();
+        delete[] ch;
         return in;
     }
     

@@ -225,7 +225,7 @@ namespace
         return temps;
     }
 
-    inline bool create_folder(const std::string& folder) //test
+    inline bool create_folder(const std::string& folder)
     {
         using fsys::is_folder;
         using fsys::is_file;

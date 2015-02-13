@@ -83,8 +83,8 @@ namespace common
     {
         std::cout.flush();
         //I decided to use an escape sequence instead of the termios api.
-        char ch[] = {(char)0x1b, '[', '1', ';', '1', 'H', (char)0x1b, '[', '2', 'J', (char)0x1b, '[', '2', 'K'};
-        std::cout<< ch;
+        std::cout<< (char)0x1b<< '['<< '1'<< ';'<< '1'<< 'H'<< (char)0x1b<<
+                '['<< '2'<< 'J'<< (char)0x1b<< '['<< '2'<< 'K';
     }
     
     key_code::key_code_data gkey_funct()

@@ -16,13 +16,14 @@ namespace scrollDisplay
     
     typedef struct window_data
     {
-        void operator=(const window_data& wd)
+        window_data& operator=(const window_data& wd)
         {
             if(this != & wd)
             {
                 this->beg = wd.beg;
                 this->size = wd.size;
             }
+            return *this;
         }
         
         signed long size = 15, beg = 0;
@@ -30,13 +31,14 @@ namespace scrollDisplay
     
     typedef struct position_data
     {
-        void operator=(const position_data& pd)
+        position_data& operator=(const position_data& pd)
         {
             if(this != &pd)
             {
                 this->part = pd.part;
                 this->whole = pd.whole;
             }
+            return *this;
         }
         
         short part = 0;
@@ -48,7 +50,7 @@ namespace scrollDisplay
     typedef class scroll_display_class
     {
     public:
-        explicit scroll_display_class() : display(NULL), 
+        explicit scroll_display_class() : display(nullptr), 
                 wind(), 
                 pos() {}
         
@@ -60,15 +62,20 @@ namespace scrollDisplay
         
         ~scroll_display_class(){}
         
-        void operator=(const scroll_display_class& sdc)
+        scroll_display_class& operator=(const scroll_display_class& sdc)
         {
             if(this != &sdc)
             {
-                assert(sdc.display != NULL);
+                if(sdc.display == nullptr)
+                {
+                    throw std::runtime_error("Can not use operator=(const scroll_display_class&) \
+on an object with a null scroll_display_class::display!");
+                }
                 this->display = sdc.display;
                 this->pos = sdc.pos;
                 this->wind = sdc.wind;
             }
+            return *this;
         }
         
         bool mv_up();
@@ -166,7 +173,7 @@ namespace scrollDisplay
         
         void remove_selected();
         type& selected();
-        scroll_display_class& win();
+        scroll_display_class& win(); //this makes sure the display is updated before each access to it.
         
     private:
         void update();

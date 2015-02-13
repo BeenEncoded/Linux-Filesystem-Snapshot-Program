@@ -13,7 +13,7 @@ namespace
 namespace key_code
 {
     
-    std::vector<key_code_data> keys({
+    const std::vector<key_code_data> keys({
         key_code_data((char)8), //backspace
         key_code_data((char)27),  //escape
         key_code_data(std::vector<int>({27, 91, 51, 126})), //delete
@@ -61,6 +61,11 @@ namespace key_code
             }
         }
         return out;
+    }
+    
+    key_code_data::key_code_data(const key_code_data& k) : is_control(k.is_control), 
+            control_d(k.control_d)
+    {
     }
     
     key_code_data::key_code_data(const char& c) : is_control(false), control_d({(int)c})

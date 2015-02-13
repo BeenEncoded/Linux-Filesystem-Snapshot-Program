@@ -50,7 +50,7 @@ namespace key_code
 {
     typedef class key_code_data key_code_data;
     
-    extern std::vector<key_code_data> keys;
+    extern const std::vector<key_code_data> keys;
     
     std::ostream& operator<<(std::ostream&, const key_code_data&);
     
@@ -60,6 +60,7 @@ namespace key_code
     typedef class key_code_data
     {
     public:
+        key_code_data(const key_code_data&);
         explicit key_code_data(const std::vector<int>&);
         explicit key_code_data(const char&);
         explicit key_code_data();
