@@ -1,5 +1,0 @@
-#!/bin/bash
-
-#add "build" folder, and then just run this simple script to build!  :)
-
-clear && rm -rf ../build/* && cmake -G "Unix Makefiles" .. && clear && make clean && make
