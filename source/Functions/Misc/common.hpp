@@ -66,6 +66,7 @@ namespace common
                     /* So, here we are: we didn't reach the end of the file, 
                      but somwhere there was a big mistake... the program will
                      now attempt to salvage the situation: */
+                    in.seekg(0, std::ios::beg);
                     in.seekg(previous_position);
                     success = false;
                 }
@@ -76,23 +77,22 @@ namespace common
         
     }
     
-    void cls();
-    void cl();
-    bool kbhit();
+    void cls() noexcept;
+    void cl() noexcept;
+    bool kbhit() noexcept;
     key_code::key_code_data gkey();
     key_code::key_code_data gkey_funct();
     key_code::key_code_data getch_funct();
-    void wait();
-    bool is_letter(const char&);
-    bool is_number(const char&);
-    bool is_special(const char&);
-    bool is_char(const char&);
-    void center(const std::string&);
+    void wait() noexcept;
+    bool is_letter(const char&) noexcept;
+    bool is_number(const char&) noexcept;
+    bool is_special(const char&) noexcept;
+    bool is_char(const char&) noexcept;
+    void center(const std::string&) noexcept;
     struct tm get_time();
-    void display_scroll_window(scrollDisplay::scroll_display_class&, const unsigned int&);
-    std::string parent_folder(const std::string&);
-    bool string_begins_with(const std::string&, const std::string&);
-    bool string_ends_with(const std::string&, const std::string&);
+    std::string parent_folder(const std::string&) noexcept;
+    bool string_begins_with(const std::string&, const std::string&) noexcept;
+    bool string_ends_with(const std::string&, const std::string&) noexcept;
     
     namespace inp
     {

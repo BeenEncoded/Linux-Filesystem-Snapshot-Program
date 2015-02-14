@@ -10,6 +10,8 @@ namespace rand_data
     char random_char();
     std::string random_str(const unsigned int&, const unsigned int&);
     snapshot::snapshot_data random_snapshot();
+    bool random_bool();
+    
 }
 
 #endif

@@ -3,14 +3,19 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 #define LETTERS "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
 #define NUMBERS "1234567890"
 #define SPECIALS "`~!@#$%^&*()-_=+[{]}\\|;:\'\",<.>/? "
 #define GSTRING_CANCEL "oiwydfp980  q30f8p90c9-i130894f=i-=23f=-    0w2g]["
 
-/** FILESYSTEM reading constants: */
+//this should be used to report programming mistakes...  returning errors for things that should never happen.
+#define ethrow(MSG) throw std::runtime_error(std::string(std::string(__FILE__) + \
+"    Exception thrown at line " + std::to_string(__LINE__) + \
+": " + std::string(MSG)))
 
+/** FILESYSTEM reading constants: */
 
 //snapshot folder (snap_):
 #define fsyssnap_SNAPSHOT_FOLDER_NAME "snapshots"
@@ -43,17 +48,16 @@ typedef const_int_type<8> v_center;
 
 namespace key_code
 {
-    class key_code_data;
+    typedef class key_code_data key_code_data;
     
-    extern std::vector<key_code_data> keys;
+    extern const std::vector<key_code_data> keys;
     
     std::ostream& operator<<(std::ostream&, const key_code_data&);
     
     bool is_listed_control(const key_code_data&);
     bool might_be_control(const key_code_data&);
     
-    //todo eliminate unions from this object
-    class key_code_data
+    typedef class key_code_data
     {
     public:
         key_code_data(const key_code_data&);
@@ -67,22 +71,11 @@ namespace key_code
         bool operator==(const key_code_data&) const;
         bool operator!=(const key_code_data&) const;
         
-        /* Allows the safe reference of the union variables: */
-        char& ch();
-        const char& ch() const;
-        
-        std::vector<int>& control();
-        const std::vector<int>& control() const;
-        
         //I try to make this as small as possible:
         bool is_control : 1;
         
-        union
-        {
-            char ch_d;
-            std::vector<int> control_d;
-        };
-    };
+        std::vector<int> control_d;
+    }key_code_data;
     
     namespace code
     {

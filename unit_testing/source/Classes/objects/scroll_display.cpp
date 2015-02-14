@@ -1,8 +1,11 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <assert.h>
 
 #include "scroll_display.hpp"
+#include "snapshot_class.hpp"
+#include "global_defines.hpp"
 
 namespace
 {
@@ -80,29 +83,18 @@ namespace scrollDisplay
     {
         this->sync();
         bool success(false);
-        switch(this->wind.beg >= (this->wind.size - 1))
+        if(this->wind.beg >= (this->wind.size - 1))
         {
-            case true:
+            success = true;
+            this->wind.beg -= (this->wind.size - 1);
+        }
+        else
+        {
+            if(this->wind.beg != 0)
             {
+                this->wind.beg = 0;
                 success = true;
-                this->wind.beg -= (this->wind.size - 1);
             }
-            break;
-            
-            case false:
-            {
-                if(this->wind.beg != 0)
-                {
-                    this->wind.beg = 0;
-                    success = true;
-                }
-            }
-            break;
-            
-            default:
-            {
-            }
-            break;
         }
         return success;
     }
@@ -203,31 +195,20 @@ namespace scrollDisplay
             /* So, first we need to check if the "previous window" is within
              the vector's bounds.  If it is, then we simply pg-up, otherwise
              we just jump to the first element.*/
-            switch(this->pos.whole >= (this->wind.size - 1))
+            if(this->pos.whole >= (this->wind.size - 1))
             {
-                case true:
+                this->pos.whole -= (this->wind.size - 1);
+                this->sync();
+                success = true;
+            }
+            else
+            {
+                if(this->pos.whole != 0)
                 {
-                    this->pos.whole -= (this->wind.size - 1);
+                    this->pos.whole = 0;
                     this->sync();
                     success = true;
                 }
-                break;
-                
-                case false:
-                {
-                    if(this->pos.whole != 0)
-                    {
-                        this->pos.whole = 0;
-                        this->sync();
-                        success = true;
-                    }
-                }
-                break;
-                
-                default:
-                {
-                }
-                break;
             }
         }
         return success;
@@ -243,31 +224,20 @@ namespace scrollDisplay
             /* So, basically, we need to check if the "next window" is within 
              the display vector's bounds.  If it is, then we simply page-down,
              otherwise, we can just jump to the end. */
-            switch(unsigned(((this->display->size() - 1) - this->pos.whole)) >= (this->wind.size - 1))
+            if(unsigned(((this->display->size() - 1) - this->pos.whole)) >= (this->wind.size - 1))
             {
-                case true:
+                this->pos.whole += (this->wind.size - 1);
+                success = true;
+                this->sync();
+            }
+            else
+            {
+                if(this->pos.whole < (this->display->size() - 1))
                 {
-                    this->pos.whole += (this->wind.size - 1);
-                    success = true;
+                    this->pos.whole = (this->display->size() - 1);
                     this->sync();
+                    success = true;
                 }
-                break;
-                
-                case false:
-                {
-                    if(this->pos.whole < (this->display->size() - 1))
-                    {
-                        this->pos.whole = (this->display->size() - 1);
-                        this->sync();
-                        success = true;
-                    }
-                }
-                break;
-                
-                default:
-                {
-                }
-                break;
             }
         }
         return success;
@@ -280,5 +250,100 @@ namespace scrollDisplay
     }
     
     
+}
+
+namespace scrollDisplay
+{
+    template<class type>
+    window_data_class<type>::window_data_class() : data(NULL), 
+            update_display(NULL),
+            display(),
+            window(display)
+    {
+    }
+    
+    template<class type>
+    window_data_class<type>::window_data_class(std::vector<type>& d, 
+            void (*conv)(const std::vector<type>&, std::vector<std::string>&)) : 
+            data(&d),
+            update_display(conv),
+            display(),
+            window(display)
+    {
+        if(data == nullptr) ethrow("You can not initialize window_data_class with null data!");
+        this->update();
+    }
+    
+    template<class type>
+    window_data_class<type>::~window_data_class()
+    {
+    }
+    
+    template<class type>
+    window_data_class<type>& window_data_class<type>::operator=(const window_data_class<type>& w)
+    {
+        if(this != &w)
+        {
+            this->display.clear();
+            this->data = w.data;
+            this->update_display = w.update_display;
+            this->window = w.window;
+            this->display = w.display;
+        }
+        return *this;
+    }
+    
+    template<class type>
+    bool window_data_class<type>::operator==(const window_data_class<type>& w) const noexcept
+    {
+        return ((this->data == w.data) && 
+                (this->display == w.display) && 
+                (this->update_display == w.update_display));
+    }
+    
+    template<class type>
+    bool window_data_class<type>::operator!=(const window_data_class<type>& w) const noexcept
+    {
+        return !(this->operator==(w));
+    }
+    
+    template<class type>
+    void window_data_class<type>::remove_selected()
+    {
+        if(!this->data->empty())
+        {
+            this->data->erase(this->data->begin() + this->window.gpos().whole);
+            this->update();
+        }
+    }
+    
+    template<class type>
+    type& window_data_class<type>::selected()
+    {
+        if(this->data == nullptr) ethrow("Invalid reference to null pointer.");
+        this->update();
+        return (*(this->data))[this->window.gpos().whole];
+    }
+    
+    template<class type>
+    scroll_display_class& window_data_class<type>::win()
+    {
+        this->update();
+        return this->window;
+    }
+    
+    template<class type>
+    void window_data_class<type>::update()
+    {
+        if(this->data == nullptr)
+        {
+            ethrow("Can not update window_data_class with null data!");
+        }
+        this->update_display(*(this->data), this->display);
+    }
+    
+    template class window_data_class<snapshot::snapshot_data>;
+    template class window_data_class<settings::regex_data>;
+    template class window_data_class<std::string>;
 }
 

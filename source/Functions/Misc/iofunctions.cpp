@@ -4,6 +4,7 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <term.h>
+#include <cstring>
 
 #include "iofunctions.hpp"
 #include "global_defines.hpp"
@@ -23,7 +24,7 @@ namespace input
         
         tcsetattr(STDIN_FILENO, TCSANOW, &cur_term);
         
-        return key_code::key_code_data(ch);
+        return key_code::key_code_data(char(ch));
     }
     
     bool kbhit()
@@ -78,13 +79,14 @@ namespace output
 {
     void cls()
     {
+        char ch[] = "clear";
         if (!cur_term)
         {
             int result;
             setupterm( NULL, STDOUT_FILENO, &result );
             if (result <= 0) return;
         }
-        putp( tigetstr( "clear" ) );
+        putp( tigetstr( ch ) );
     }
     
     

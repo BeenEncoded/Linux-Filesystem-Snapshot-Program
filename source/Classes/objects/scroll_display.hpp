@@ -5,12 +5,16 @@
 #include <assert.h>
 
 #include "global_defines.hpp"
+#include "program_settings.hpp"
 
 namespace scrollDisplay
 {
-    class scroll_display_class;
+    typedef class scroll_display_class scroll_display_class;
+    typedef struct window_data window_data;
+    typedef struct position_data position_data;
     
-    struct window_data
+    
+    typedef struct window_data
     {
         void operator=(const window_data& wd)
         {
@@ -22,9 +26,9 @@ namespace scrollDisplay
         }
         
         signed long size = 15, beg = 0;
-    };
+    } window_data;
     
-    struct position_data
+    typedef struct position_data
     {
         void operator=(const position_data& pd)
         {
@@ -37,11 +41,11 @@ namespace scrollDisplay
         
         short part = 0;
         unsigned int whole = 0;
-    };
+    } position_data;
     
     /* scroll_display_class: a class designed to manage a window and make 
      * it easy to create a scroll display.*/
-    class scroll_display_class
+    typedef class scroll_display_class
     {
     public:
         explicit scroll_display_class() : display(NULL), 
@@ -52,7 +56,6 @@ namespace scrollDisplay
                     wind(),
                     pos()
         {
-            assert(&d != NULL);
         }
         
         ~scroll_display_class(){}
@@ -117,32 +120,20 @@ namespace scrollDisplay
         {
             assert(this->display != NULL);
             signed long temp(this->wind.beg + (this->wind.size - 1));
-            switch(this->display->size() > 0)
+            if(this->display->size() > 0)
             {
-                case true:
+                if(temp > 0)
                 {
-                    if(temp > 0)
-                    {
-                        if(unsigned(temp) >= this->display->size()) temp = (this->display->size() - 1);
-                    }
-                    if(temp < this->wind.beg)
-                    {
-                        throw "Error:  signed long end_pos() const (end_pos < wind.begin)!!!";
-                    }
+                    if(unsigned(temp) >= this->display->size()) temp = (this->display->size() - 1);
                 }
-                break;
-                
-                case false:
+                if(temp < this->wind.beg)
                 {
-                    temp = (-1);
+                    throw "Error:  signed long end_pos() const (end_pos < wind.begin)!!!";
                 }
-                break;
-                
-                default:
-                {
-                    temp = (-1);
-                }
-                break;
+            }
+            else
+            {
+                temp = (-1);
             }
             return temp;
         }
@@ -156,9 +147,38 @@ namespace scrollDisplay
         }
         
         
+    } scroll_display_class;
+    
+    /** An abstraction of the scroll display class meant to
+     * associate a list of arbitray elements with the window. */
+    template<class type>
+    class window_data_class
+    {
+    public:
+        explicit window_data_class();
+        explicit window_data_class(std::vector<type>&, 
+                void (*)(const std::vector<type>&, std::vector<std::string>&));
+        ~window_data_class();
+        
+        window_data_class<type>& operator=(const window_data_class<type>&);
+        bool operator==(const window_data_class<type>& w) const noexcept;
+        bool operator!=(const window_data_class<type>& w) const noexcept;
+        
+        void remove_selected();
+        type& selected();
+        scroll_display_class& win();
+        
+    private:
+        void update();
+    
+        std::vector<type> *data;
+        void (*update_display)(const std::vector<type>&, std::vector<std::string>&);
+        std::vector<std::string> display;
+        scroll_display_class window;
+        
     };
     
-    
 }
+
 
 #endif

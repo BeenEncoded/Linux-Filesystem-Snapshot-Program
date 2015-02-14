@@ -8,7 +8,7 @@
 #include "common_menu.hpp"
 #include "common.hpp"
 #include "snapshot_class.hpp"
-#include "snapshot_file_loaders.hpp"
+#include "snapshot_file_loader.hpp"
 #include "filesystem.hpp"
 
 using std::cout;
@@ -16,26 +16,18 @@ using std::endl;
 
 namespace
 {
-    void display_element(const std::string&, const bool&);
+    void display_element(const std::string&, const bool&, const bool&);
     void display_top_border(scrollDisplay::scroll_display_class&);
     void display_bottom_border(scrollDisplay::scroll_display_class&, const unsigned int&);
-    void display_multiselect_element(const std::string&, const bool&, const bool&);
+    std::string filename(const std::string&);
+    std::string extension(const std::string&);
+    bool folder_contains_ext(const std::string&, const std::string&);
     
     
-    inline void display_element(const std::string& s, const bool& selected)
+    inline void display_element(const std::string& s, const bool& selected, 
+                    const bool& special_selected)
     {
-        if(selected) cout<< "[";
-        else cout<< " ";
-        
-        cout<< s;
-        
-        if(selected) cout<< "]";
-    }
-    
-    inline void display_multiselect_element(const std::string& s, const bool& selected, const bool& multiselected)
-    {
-        if(multiselected) cout<< ">";
-        else cout<< " ";
+        cout<< (special_selected ? ">" : " ");
         
         if(selected) cout<< "[";
         else cout<< " ";
@@ -43,9 +35,7 @@ namespace
         cout<< s;
         
         if(selected) cout<< "]";
-        else cout<< " ";
-        
-        if(multiselected) cout<< "<";
+        if(special_selected) cout<< "<";
     }
     
     inline void display_top_border(scrollDisplay::scroll_display_class& win)
@@ -70,6 +60,48 @@ namespace
         if(from_end > 0) common::center("V " + std::to_string(from_end) + " V");
         cout<< endl;
     }
+    
+    inline std::string filename(const std::string& f)
+    {
+        std::size_t pos(f.rfind(fsys::pref_slash()));
+        std::string temps(f);
+        if(pos != std::string::npos)
+        {
+            temps.erase(temps.begin(), (temps.begin() + pos + 1));
+        }
+        return temps;
+    }
+    
+    inline std::string extension(const std::string& file)
+    {
+        std::string temps(filename(file));
+        std::size_t pos(temps.rfind('.'));
+        
+        if(pos != std::string::npos)
+        {
+            temps.erase(temps.begin(), (temps.begin() + pos));
+        }
+        return temps;
+    }
+    
+    inline bool folder_contains_ext(const std::string& folder, const std::string& ext)
+    {
+        using fsys::tree_iterator_class;
+        using fsys::is_folder;
+        using fsys::is_file;
+        using fsys::is_symlink;
+        
+        if(!is_folder(folder).value || is_symlink(folder).value || is_file(folder).value) return false;
+        for(tree_iterator_class it(folder); !it.at_end(); ++it)
+        {
+            if(is_file(it.value()).value && !is_symlink(it.value()).value)
+            {
+                if(extension(it.value()) == ext) return true;
+            }
+        }
+        return false;
+    }
+    
     
     
 }
@@ -117,7 +149,7 @@ namespace common_menu
             }
             else
             {
-                std::cerr<< "Snapshot not saved: invalid identification (unsigned \
+                std::cout<< "Snapshot not saved: invalid identification (unsigned \
     long long)"<< std::endl;
             }
             return success;
@@ -129,18 +161,49 @@ namespace common_menu
 
 namespace common_menu
 {
-    void display_scroll_window(scrollDisplay::scroll_display_class& win, const unsigned int& total_size)
+    void display_scroll_window(scrollDisplay::scroll_display_class& win, 
+                    const unsigned int& total_size)
     {
         std::vector<std::string> disp(win.window());
         
         display_top_border(win);
         for(short x = 0; x < (short)disp.size(); x++)
         {
-            display_element(disp[x], (x == win.gpos().part));
+            display_element(disp[x], (x == win.gpos().part), false);
             cout<< endl;
         }
         display_bottom_border(win, total_size);
     }
+    
+    void display_scroll_window(scrollDisplay::scroll_display_class& win, 
+                    const unsigned int& total_size,
+                    const selection_class& selection)
+    {
+        std::vector<std::string> disp(win.window());
+        
+        display_top_border(win);
+        for(short x = 0; x < (short)disp.size(); x++)
+        {
+            display_element(disp[x], (x == win.gpos().part), selection.is_selected(win.window_beg() + x));
+            cout<< endl;
+        }
+        display_bottom_border(win, total_size);
+    }
+    
+    
+    /** Used to define how the program tells whether records exist. */
+    bool records_exist(const std::string& rfolder)
+    {
+        return folder_contains_ext(rfolder, ".txt");
+    }
+    
+    /** Used to define how the program tells whether snapshots exist. */
+    bool snapshots_exist(const std::string& folder)
+    {
+        return folder_contains_ext(folder, fsyssnap_SNAPSHOT_FILE_EXTENSION);
+    }
+    
+    
     
     
 }
@@ -153,6 +216,23 @@ namespace common_menu
     selection_class::~selection_class()
     {
         this->selection.clear();
+    }
+    
+    const unsigned int& selection_class::operator[](int x) const
+    {
+        int tempi(0);
+        if(!this->selection.empty())
+        {
+            for(std::unordered_set<unsigned int>::const_iterator it = this->selection.begin(); 
+                            it != this->selection.end(); 
+                            ++it)
+            {
+                if(tempi == x) return *it;
+                tempi++;
+            }
+        }
+        throw std::out_of_range("line: " + std::to_string(__LINE__) + ": const unsigned int& \
+selection_class::operator[](int x) const: Error: Must be within bounds of the selection!");
     }
     
     const selection_class& selection_class::operator=(const selection_class& s)
@@ -180,10 +260,14 @@ namespace common_menu
         return (this->selection.erase(x) > 0);
     }
     
-    /* returns the number of selected elements.*/
-    unsigned int selection_class::count() const
+    const std::unordered_set<unsigned int>& selection_class::gselection() const
     {
-        return this->selection.size();
+        return this->selection;
+    }
+    
+    void selection_class::clear()
+    {
+        this->selection.clear();
     }
     
     

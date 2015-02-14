@@ -58,6 +58,7 @@ set(USING_NCURSES_LIBRARY true)
 set(NCURSES_LIB_COMPONENTS ncurses) #change these library filenames if necessary
 set(NCURSES_LIB_COMPONENTS_LITERAL libncurses.a)
 
+
 #-------------------------------------------------------------------------------------------------
 #cmake settings:
 
@@ -71,7 +72,6 @@ else()
 endif()
 
 set(BUILD_SHARED_LIBS OFF)
-
 
 # =================================================================================================
 # =================================================================================================
@@ -103,14 +103,6 @@ endmacro(set_strict)
 macro(set_static)
     add_definitions(-static)
 endmacro(set_static)
-
-macro(add_mthread)
-    if(CPLUSPLUS_11)
-        if(ENABLE_MULTITHREADING)
-            add_definitions(-pthread -Wl,--no-as-needed)
-        endif()
-    endif()
-endmacro(add_mthread)
 
 macro(link_mthread)
     if(CPLUSPLUS_11)
@@ -226,33 +218,13 @@ else()
     add_definitions(-m32)
 endif()
 
-if(USING_BOOST_LIBRARY)
-    foreach(temp ${BOOST_LIB_COMPONENTS_LITERAL})
-        add_definitions(-l:${temp})
-    endforeach(temp)
-endif()
-
-if(USING_NCURSES_LIBRARY)
-    foreach(temp2 ${NCURSES_LIB_COMPONENTS_LITERAL})
-        add_definitions(-l:${temp2})
-    endforeach(temp2)
-endif()
-
-if(USING_ADDITIONAL_LIBS)
-    foreach(temp1 ${ADDITIONAL_LIB_COMPONENTS_LITERAL})
-        add_definitions(-l:${temp1})
-    endforeach(temp1)
-endif()
-
-add_mthread()
-
 add_files()
-
-link_mthread()
 
 if(USING_ADDITIONAL_LIBS)
     add_additional_libs()
 endif()
+
+link_mthread()
 
 if(USING_NCURSES_LIBRARY)
     add_ncurses()
