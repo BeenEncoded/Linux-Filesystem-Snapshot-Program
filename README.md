@@ -23,3 +23,11 @@ If we know all the paths that exist at one point in time, and all the paths that
 --- 
  
 -  Hashing files so that a diff can include whether or not a file has been changed, and not just it's location or name. 
+ 
+--- 
+ 
+###Build Dependencies: 
+ 
+-  Linux 
+-  Boost Library
+-  NCurses
