@@ -404,8 +404,8 @@ namespace
             
             std::unordered_set<std::string> paths_before, paths_after;
             std::string temps;
-            snapshot::snapshot_data const *before(((snap1.timestamp < snap2.timestamp) ? &snap2 : &snap1)), 
-                    *after(((snap1.timestamp < snap2.timestamp) ? &snap1 : &snap2));
+            snapshot::snapshot_data const *before(((snap1.timestamp < snap2.timestamp) ? &snap1 : &snap2)), 
+                    *after(((snap1.timestamp < snap2.timestamp) ? &snap2 : &snap1));
             std::ofstream out;
             
             if((data.ids.find(before->id) != data.ids.end()) && 
