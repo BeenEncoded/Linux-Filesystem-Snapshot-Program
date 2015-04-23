@@ -54,7 +54,7 @@ set(USING_UNITTESTPP_LIBS true)
 
 #Additional Libraries
 set(USING_ADDITIONAL_LIBS false)
-set(ADDITIONAL_LIB_COMPONENTS_LITERAL #[[Add libs here ]]) #add additional misc libs here
+set(ADDITIONAL_LIB_COMPONENTS_LITERAL libUnitTest++.a) #add additional misc libs here
 
 #ncurses settings
 set(USING_NCURSES_LIBRARY true)
