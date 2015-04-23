@@ -1,3 +1,6 @@
+#if UNIT_TEST_PROG == true
+#ifndef RETRIEVE_SNAPSHOT_INFORMATION_TEST_CASE_HPP_INCLUDED
+#define RETRIEVE_SNAPSHOT_INFORMATION_TEST_CASE_HPP_INCLUDED
 #include <unittest++/UnitTest++.h>
 #include <string>
 #include <iostream>
@@ -193,8 +196,12 @@ TEST_FIXTURE(fixture_class, retrieve_information_test_case)
 {
     using namespace test;
     
+    std::cout<< "Testing snapshot info retrieval..."<< std::endl;
+    
     std::vector<snapshot::snapshot_data> tempsnap;
     tempsnap = load_all_headers(settings::settings_data().global.snapshot_folder);
     CHECK(snapshot_list_eq(tempsnap, snaps));
 }
 
+#endif
+#endif

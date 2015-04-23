@@ -1,3 +1,4 @@
+#if UNIT_TEST_PROG == true
 #ifndef TEST_SETTING_STREAMS_HPP_INCLUDED
 #define TEST_SETTING_STREAMS_HPP_INCLUDED
 #include <unittest++/UnitTest++.h>
@@ -82,6 +83,7 @@ SUITE(setting_streams_test_suite)
 {
     TEST(test_regex_data_stream_operators_test_case)
     {
+        std::cout<< "Testing regex_data stream operatos..."<< std::endl;
         for(unsigned int x = 0; x < test_rep::value; ++x)
         {
             CHECK(test_stream_ops<settings::regex_data>(random_regex_data()));
@@ -90,6 +92,7 @@ SUITE(setting_streams_test_suite)
     
     TEST(test_regex_settings_data_test_case)
     {
+        std::cout<< "Testing regex_settings_data stream operators..."<< std::endl;
         for(unsigned int x = 0; x < test_rep::value; ++x)
         {
             CHECK(test_stream_ops<settings::regex_settings_data>(random_regex_settings()));
@@ -98,6 +101,7 @@ SUITE(setting_streams_test_suite)
     
     TEST(test_settings_data_test_case)
     {
+        std::cout<< "Testing settings_data stream operators..."<< std::endl;
         for(unsigned int x = 0; x < test_rep::value; ++x)
         {
             CHECK(test_stream_ops<settings::settings_data>(random_settings_data()));
@@ -107,4 +111,5 @@ SUITE(setting_streams_test_suite)
     
 }
 
+#endif
 #endif

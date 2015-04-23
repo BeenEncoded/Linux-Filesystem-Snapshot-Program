@@ -1,3 +1,7 @@
+#if UNIT_TEST_PROG == true
+#ifndef SNAPSHOT_DATA_STREAM_OPERATOR_TEST_CASE_HPP_INCLUDED
+#define SNAPSHOT_DATA_STREAM_OPERATOR_TEST_CASE_HPP_INCLUDED
+
 /** This test case tests the stream operators for snapshot::snapshot_data
  * to make sure that they work properly under all circumstances. */
 
@@ -81,6 +85,7 @@ SUITE(snapshot_data_tests_test_suite)
 {
     TEST(snapshot_data_stream_operator_test_case)
     {
+        std::cout<< "Testing snapshot_data stream operators..."<< std::endl;
         bool tempb(false);
         for(unsigned int x = 0; x < 20; x++)
         {
@@ -93,3 +98,6 @@ SUITE(snapshot_data_tests_test_suite)
     
     
 }
+
+#endif
+#endif

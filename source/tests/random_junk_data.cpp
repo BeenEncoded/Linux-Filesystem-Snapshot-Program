@@ -1,3 +1,4 @@
+#if UNIT_TEST_PROG == true
 #include <string>
 #include <cstdlib>
 
@@ -57,3 +58,5 @@ namespace rand_data
     
     
 }
+
+#endif

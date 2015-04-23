@@ -1,3 +1,4 @@
+#if UNIT_TEST_PROG == true
 #ifndef RANDOM_JUNK_DATA_HPP_INCLUDED
 #define RANDOM_JUNK_DATA_HPP_INCLUDED
 #include <string>
@@ -14,4 +15,5 @@ namespace rand_data
     
 }
 
+#endif
 #endif
