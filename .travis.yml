@@ -3,6 +3,6 @@ before_install:
   - sudo apt-get install boost cmake
 language: cpp
 compiler:
-  - gcc
   - clang
+  - gcc
 script: cmake -G "Unix Makefiles" .. && make release
