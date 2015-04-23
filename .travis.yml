@@ -1,6 +1,6 @@
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install boost cmake
+  - sudo apt-get install libboost-all-dev cmake
 language: cpp
 compiler:
   - clang
