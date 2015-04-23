@@ -260,7 +260,7 @@ macro(create_target_build targ)
 endmacro(create_target_build)
 
 #this is where we start configuration:
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.2.2)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 project(${PROGRAM_NAME})
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
