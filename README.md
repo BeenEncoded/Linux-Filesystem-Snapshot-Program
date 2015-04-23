@@ -1,5 +1,5 @@
 #Filesystem Snapshot Program 
-[![Build Status](https://travis-ci.org/BeenEncoded/Linux-Filesystem-Snapshot-Program.svg?branch=developement_branch)](https://travis-ci.org/BeenEncoded/Linux-Filesystem-Snapshot-Program) 
+Note: Travis doesn't support cmake 3.2.2 yet... So travis status will have t wait a while.
  
 --- 
 ###What does it do? 
